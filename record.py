@@ -34,7 +34,7 @@ def print_master_error(string):
     print(bcolors.BOLD + bcolors.FAIL + 'MASTER ERROR: ' + string + bcolors.ENDC)
 
 # Check master camera setup
-# Params: cams, 
+# Params: cams
 def get_predefined_master_cam_sticker(cams):
     master_cam_sticker = None
     master_cam_already_found = False
@@ -58,21 +58,13 @@ def get_predefined_master_cam_sticker(cams):
         sys.exit()
     return master_cam_sticker
 # Return: master_cam_sticker
-master_cam_sticker = get_predefined_master_cam_sticker(cams)
-
-
-# Parse predefined serial numbers
-predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()]
-
-# Get connected camera list
-connected_camera_list = subprocess.check_output(['k4arecorder', '--list']).decode('utf-8')
 
 # Get connected camera serial numbers and indexes
-# Params: connected_camera_list
-def get_connected_camera_serial_numbers_and_indexes(connected_camera_list):
-    connected_indexes = []
+# Params: connected_camera_list, predef_ser_nums
+def get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums):
     connected_ser_nums = []
-
+    connected_indexes = []
+    
     def get_val(line, pattern):
         return line.split(pattern)[1].split()[0]
 
@@ -106,9 +98,8 @@ def get_connected_camera_serial_numbers_and_indexes(connected_camera_list):
     else:
         print_master('All required cameras are connected and recognized')
 
-    return connected_indexes, connected_ser_nums
-# Return: connected_indexes, connected_ser_nums
-connected_indexes, connected_ser_nums = get_connected_camera_serial_numbers_and_indexes(connected_camera_list)
+    return connected_ser_nums, connected_indexes
+# Return: connected_ser_nums, connected_indexes
 
 # Assign indexes to predefined cameras
 # Params: connected_ser_nums, connected_indexes, cams
@@ -119,74 +110,89 @@ def assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes,
                 cams[cam_sticker]['index'] = connected_index
     return cams
 # Return: cams
-cams = assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes, cams)
 
 # Prepare names for path and files
-file_base_name = time.strftime("%Y-%m-%d-%H-%M-%S")
-master_name = f'{master_cam_sticker}m.mkv'#f'{file_base_name}-{master_cam_sticker}m.mkv'
+# Params: master_cam_sticker, cams
+def create_names_for_path_and_files(cams, master_cam_sticker):
+    file_base_name = time.strftime("%Y-%m-%d-%H-%M-%S")
+    master_name = f'{master_cam_sticker}m.mkv'#f'{file_base_name}-{master_cam_sticker}m.mkv'
 
-subordinate_name_template = lambda x : f'{x}s.mkv'#f'{file_base_name}-{x}s.mkv'
+    subordinate_name_template = lambda x : f'{x}s.mkv'#f'{file_base_name}-{x}s.mkv'
 
-cams[master_cam_sticker]['output_name'] = master_name
+    cams[master_cam_sticker]['output_name'] = master_name
 
-for cam_sticker in cams.keys():
-    if cam_sticker != master_cam_sticker:
-        cams[cam_sticker]['output_name'] = subordinate_name_template(cam_sticker)
+    for cam_sticker in cams.keys():
+        if cam_sticker != master_cam_sticker:
+            cams[cam_sticker]['output_name'] = subordinate_name_template(cam_sticker)
+    return cams, file_base_name
+#Return: cams, file_base_name
 
 # Prepare command lines for recording
-subordinate_cmd_lines = []
+# Params: cams, master_cam_sticker
+def prepare_recording_command_lines(cams, master_cam_sticker):
+    subordinate_cmd_lines = []
 
-for cam_sticker in cams.keys():
-    cc = cams[cam_sticker]
-    index = cc['index']
-    sync_delay = cc['sync_delay']
-    depth_mode = cc['depth_mode']
-    color_mode = cc['color_mode']
-    frame_rate = cc['frame_rate']
-    exposure = cc['exposure']
-    output_name = cc['output_name']
-    
-    if cam_sticker == master_cam_sticker:
-        master_cmd_line = f'k4arecorder --device {index} --external-sync Master --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} --exposure-control {exposure} {output_name}'
-        print_master('Master recording command:\n  ' + master_cmd_line)
-    else:
-        subordinate_cmd_line = f'k4arecorder --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} --exposure-control {exposure} {output_name}'
-        print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
-        subordinate_cmd_lines.append(subordinate_cmd_line)
+    for cam_sticker in cams.keys():
+        cc = cams[cam_sticker]
+        index = cc['index']
+        sync_delay = cc['sync_delay']
+        depth_mode = cc['depth_mode']
+        color_mode = cc['color_mode']
+        frame_rate = cc['frame_rate']
+        exposure = cc['exposure']
+        output_name = cc['output_name']
+        
+        if cam_sticker == master_cam_sticker:
+            master_cmd_line = f'k4arecorder --device {index} --external-sync Master --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} --exposure-control {exposure} {output_name}'
+            print_master('Master recording command:\n  ' + master_cmd_line)
+        else:
+            subordinate_cmd_line = f'k4arecorder --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} --exposure-control {exposure} {output_name}'
+            print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
+            subordinate_cmd_lines.append(subordinate_cmd_line)
+    return master_cmd_line, subordinate_cmd_lines
+# Return: master_cmd_line, subordinate_cmd_lines
 
-# Create path
-path = os.path.join('records', file_base_name)
-if os.path.exists(path):
-    shutil.rmtree(path)
-os.makedirs(path)
-os.chdir(path)
+def main():
+    global cams
 
-# Save parameters dict
-with open(f'{file_base_name}.json', 'w') as fp:
-    json.dump(cams, fp)
+    master_cam_sticker = get_predefined_master_cam_sticker(cams)
+    predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
+    connected_camera_list = subprocess.check_output(['k4arecorder', '--list']).decode('utf-8') # Get connected camera list
+    connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
+    cams = assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes, cams)
+    cams, file_base_name = create_names_for_path_and_files(cams, master_cam_sticker)
+    master_cmd_line, subordinate_cmd_lines = prepare_recording_command_lines(cams, master_cam_sticker)
 
-# Launch recording
-subordinate_processes = []
-for subordinate_cmd_line in subordinate_cmd_lines:
-    p = subprocess.Popen(subordinate_cmd_line.split())
-    subordinate_processes.append(p)
+    # Create path
+    path = os.path.join('records', file_base_name)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
+    os.chdir(path)
 
-time.sleep(1)
+    # Save parameters dict
+    with open(f'{file_base_name}.json', 'w') as fp:
+        json.dump(cams, fp)
 
-master_process = subprocess.Popen(master_cmd_line.split())
 
-# Handle keyboard interrupt
-try:
-    while True:
-        time.sleep(0.1)
-except KeyboardInterrupt:
+    # Launch recording
+    subordinate_processes = []
+    for subordinate_cmd_line in subordinate_cmd_lines:
+        p = subprocess.Popen(subordinate_cmd_line.split())
+        subordinate_processes.append(p)
+
+    # Wait till Subordinate cameras start before Master camera
     time.sleep(1)
 
-#def main(args):
-#	print ('kek')
-#	result = subprocess.check_output(['k4arecorder', '--list'])
-#	print(result.decode('utf-8'))#.stdout
-#	pass
+    master_process = subprocess.Popen(master_cmd_line.split())
 
-#if __name__ == '__main__':
-#    main(sys.argv)
+    # Handle keyboard interrupt
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        time.sleep(1)
+
+
+if __name__ == '__main__':
+    main()#sys.argv)
