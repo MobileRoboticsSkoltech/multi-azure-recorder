@@ -5,6 +5,8 @@ import signal
 import subprocess
 import collections
 import time
+import shutil
+import json
 
 # gain???
 cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
@@ -44,11 +46,12 @@ for cam_sticker in cams.keys():
         master_cam_already_found = True
 
 if master_cam_sticker is None:
-    print_master_error('Master camera is not predifined. Exit')
+    print_master_error('Master camera is not predifined')
     error_master_not_predefined = True
 
 if error_more_than_one_master | error_master_not_predefined:
     print_master_error('Exit')
+    sys.exit()
     
 predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()]
 
@@ -66,6 +69,9 @@ def get_val(line, pattern):
 
 error_not_recognized = False
 for line in connected_camera_list.split(sep='\n'):
+    if line == 'No devices connected.':
+        print_master_error('No devices connected.\nExit')
+        sys.exit()
     if len(line) > 0:
         ser_num = get_val(line, 'Serial:')
         print_master(f'Found camera with serial number {ser_num}')
@@ -87,6 +93,7 @@ for predef_ser_num in predef_ser_nums:
 
 if error_not_recognized | error_not_connected:
     print_master_error('Exit')
+    sys.exit()
 else:
     print_master('All required cameras are connected and recognized')
 
@@ -128,6 +135,14 @@ for cam_sticker in cams.keys():
         subordinate_cmd_lines.append(subordinate_cmd_line)
 
 #
+path = os.path.join('records', file_base_name)
+if os.path.exists(path):
+    shutil.rmtree(path)
+os.makedirs(path)
+os.chdir(path)
+
+with open(f'{file_base_name}.json', 'w') as fp:
+    json.dump(cams, fp)
 
 subordinate_processes = []
 for subordinate_cmd_line in subordinate_cmd_lines:
