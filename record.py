@@ -191,7 +191,7 @@ def main():
         while True:
             time.sleep(0.1)
     except KeyboardInterrupt:
-        time.sleep(1)
+        time.sleep(1) # needed to finalize stdouts before entire exit
 
 
 if __name__ == '__main__':
