@@ -1,0 +1,3 @@
+[submodule "Azure-Kinect-Sensor-SDK"]
+	path = Azure-Kinect-Sensor-SDK
+	url = https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK.git
