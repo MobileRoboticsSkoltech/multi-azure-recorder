@@ -3,7 +3,9 @@
 #Usage: bash extractor input_directory output_directory
 
 input_path="$1"
-output_path="$2"
+output_path="$2"'/'"$1"
+
+rm -rf $output_path
 
 for mkv_path in $(find $input_path -name '*.mkv' | sed 's,.*/,,' | sed  's,.mkv,,');
 	do
