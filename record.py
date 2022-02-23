@@ -16,8 +16,8 @@ cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera
     #'3' : {'ser_num' : '000000000000', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'resolution' : '720p', 'frame_rate' : '30', 'exposure' : '26000us', 'output_name' : None}
 }
 
-#TODO edit this
-executable = 'k4arecorder'
+this_file_path = os.path.dirname(os.path.abspath(__file__))
+executable = os.path.join(this_file_path, 'Azure-Kinect-Sensor-SDK/build/bin/mrob_recorder')
 
 class bcolors:
     HEADER = '\033[95m'
