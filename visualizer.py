@@ -3,13 +3,14 @@ from pathlib import Path
 from PIL import Image, ImageTk
 from itertools import cycle
 import numpy as np
+import sys
 
 class Application(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
-        self.title("Slideshow")
+        self.title('mrob_viewer')
         self.geometry("836x580")
         self.resizable(width=False, height=False)
         #self.label = tk.Label(self)
@@ -25,7 +26,6 @@ class Application(tk.Tk):
         self.label4 = tk.Label(self)
         self.label4.grid(row=2, column=2)
 
-
         self.duration_ms = 100
         self.n = 1
 
@@ -35,6 +35,7 @@ class Application(tk.Tk):
     #    self.imnames = cycle(map(lambda p: p.name, image_paths))
     #    self.imbufs = cycle(map(ImageTk.PhotoImage, map(Image.open, image_paths)))
     #    next_image = next(self.imbufs)
+
 
     def display_next_slide(self):
         #image_paths = Path('/tmp').glob("*color.jpg")
@@ -70,17 +71,18 @@ class Application(tk.Tk):
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
             self.next_image4 = ImageTk.PhotoImage(image)
             self.label4.config(image=self.next_image4)
-
-
         except:
             pass
-        self.title('mrob_viewer')
-        self.after(self.duration_ms, self.display_next_slide)
 
+        self.after(self.duration_ms, self.display_next_slide)
+ 
     def start(self):
         self.display_next_slide()
 
+def main():
+    application = Application()
+    application.start()
+    application.mainloop()
 
-application = Application()
-application.start()
-application.mainloop()
+if __name__ == '__main__':
+    main()
