@@ -11,8 +11,8 @@ import json
 # Recording parameters that updated during script
 # gain???
 cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '30', 'exposure' : None, 'output_name' : None},
-    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '30', 'exposure' : None, 'output_name' : None},
+    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None},
+    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None},
     #'3' : {'ser_num' : '000000000000', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'resolution' : '720p', 'frame_rate' : '30', 'exposure' : '26000us', 'output_name' : None}
 }
 
@@ -195,7 +195,7 @@ def main():
         while True:
             time.sleep(0.1)
     except KeyboardInterrupt:
-        time.sleep(1) # needed to finalize stdouts before entire exit
+        time.sleep(2) # needed to finalize stdouts before entire exit
 
 
 if __name__ == '__main__':
