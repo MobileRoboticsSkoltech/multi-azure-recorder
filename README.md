@@ -107,4 +107,4 @@ output/2022-03-03-17-14-36/
 │   └── imu.csv
 ...
 ```
-Every image name represents internal camera timestamp in __us__ from the start of every camera capturing process. Although, the timestamps do not belong to a common clock source, they are synchronized with sub-millisecond precision by Azure hardware by default. More info [here](https://box.zhores.net/index.php/s/93B2QYPxoBMS3aY?path=%2Fazures_timesync_analysis). Leading zeros are used in names for better visibility and sorting.
+Every image name represents internal camera timestamp in <ins>__microseconds__</ins> from the start of every camera capturing process. Although, the timestamps do not belong to a common clock source, they are synchronized with sub-millisecond precision by Azure hardware by default. More info [here](https://box.zhores.net/index.php/s/93B2QYPxoBMS3aY?path=%2Fazures_timesync_analysis). Leading zeros are used in names for better visibility and sorting.
