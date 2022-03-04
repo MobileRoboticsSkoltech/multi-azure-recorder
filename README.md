@@ -1,8 +1,8 @@
 # multi-azure-recorder
 This repo contains tools for synchronized RGB+D data recording and extraction from multiple Azure Kinect DKs.
 
-## Building
 
+## Building
 To start usage of the code, clone the repo with already modified Azure SDK:
 ```
 git clone --recurse-submodules https://github.com/MobileRoboticsSkoltech/multi-azure-recorder
@@ -20,6 +20,7 @@ recorder.py                 # multi- mrob_recorder launcher for multiple cam rec
 visualizer.py               # online multi- RGB+D data stream visualizer
 extractor.sh                # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
 ```
+
 
 ## Recording
 Recording process include synchronized data gathering from multiple Azure cameras. To start recording, launch
@@ -58,37 +59,51 @@ Every path contains:
 - multiple MKV files (every file correspond to a single cam, `1m` in a file name means "1st camera, Master", `2s` means "2nd camera, Subordinate") and 
 - json dictionary with parameters of cameras (the majority of params are equal to python dict; however, has some updates for some values).  
 
+Every recorded MKV file contains (if turned on in params)
+- RGB video stream,
+- D video stream,
+- IMU data stream.
 
 ## Extraction
+Extraction is aimed to
+- extract RGB+D images from video streams,
+- extract IMU data to a CSV file from IMU data stream,
+- extract timestamps and name extracted images by timestamps
+from every MKV file.
+
+To extract the data, launch the following script with the `<input path>` argument:
 ```
-extractor.sh <input path> # For instance, extractor.sh records/2022-02-10-08-36-51
+extractor.sh <input path> # For instance, 'extractor.sh records/2022-02-10-08-36-51'
 ```
+
 ### Output data structure
 ```
-output/
-  2022-02-10-08-36-51/
-    1m/
-      color/
-        0001.png
-        0002.png
-        ...
-      depth/
-        0001.png
-        0002.png
-        ...
-      imu.csv
-    2s/
-      color/
-        0001.png
-        0002.png
-        ...
-      depth/
-        0001.png
-        0002.png
-        ...
-      imu.csv
-    recording_params.json
-  ...  
+output/2022-03-03-17-14-36/
+├── 1m
+│   ├── color
+│   │   ├── 000000391122.png
+│   │   ├── 000000591066.png
+│   │   ...
+│   ├── depth
+│   │   ├── 000000391066.png
+│   │   ├── 000000591066.png
+│   │   ...
+│   ├── color_timestamps.csv
+│   ├── depth_timestamps.csv
+│   ├── ir_timestamps.csv
+│   └── imu.csv
+├── 2s
+│   ├── color
+│   │   ├── 000000189833.png
+│   │   ├── 000000389800.png
+│   │   ...
+│   ├── depth
+│   │   ├── 000000389755.png
+│   │   ├── 000000589755.png
+│   │   ...
+│   ├── color_timestamps.csv
+│   ├── depth_timestamps.csv
+│   ├── ir_timestamps.csv
+│   └── imu.csv
+...
 ```
-
-
