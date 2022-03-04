@@ -13,7 +13,7 @@ And follow the building process described in the official Azure Kinect DK API bu
 The following source paths and files are created in addition to original Azure code:  
 ```
 Azure-Kinect-Sensor-SDK/tools:
-  mrob_recorder             # modified k4arecorder
+  mrob_recorder             # modified k4arecorder as a core executable for recorder.py
   mrob_imu_data_extractor   # IMU data extractor from MKV files as a backbone for extractor.sh
   mrob_timestamps_extractor # timestamps data extractor from MKV files as a backbone for extractor.sh
 recorder.py                 # multi- mrob_recorder launcher for multiple cam recording
@@ -63,6 +63,9 @@ Every recorded MKV file contains (if turned on in params)
 - RGB video stream,
 - D video stream,
 - IMU data stream.
+
+### Visualization during recording
+`visualizer.py` is an additional tool for online image streams visualization. During recording, it can pool temporaly image files (jpg for RGB and binary for D image) created by `mrob_recorder` executable instance. It is not a part of `extractor.py`, but considered to be after solving some issues.
 
 ## Extraction
 Extraction is aimed to
