@@ -1,16 +1,16 @@
 # multi-azure-recorder
-This repo contains tools for setup and record synchronized data streams from multiple Azure Kinect DKs
+This repo contains tools for synchronized RGB+D data recording and extraction from multiple Azure Kinect DKs.
 
-To clone the repo with already modified Azure SDK:
+## Building
+
+To start usage of the code, clone the repo with already modified Azure SDK:
 ```
 git clone --recurse-submodules https://github.com/MobileRoboticsSkoltech/multi-azure-recorder
 ```
 
-## Installation
-The installation process repeats the same one stated by the official Azure Kinect DK API: [link](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/building.md).  
-No other installations are needed since the modified code is either contained in Azure repo or represents python or bash scripts.
+And follow the building process described in the official Azure Kinect DK API building instructions (__the root path there is Azure-Kinect-Sensor-SDK path__): [link](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/building.md). No additional actions are needed since our modifications are already implemented to the SDK. 
 
-The following source paths and files are created in addition to or in exchange of original Azure code:  
+The following source paths and files are created in addition to original Azure code:  
 ```
 Azure-Kinect-Sensor-SDK/tools:
   mrob_recorder             # modified k4arecorder
@@ -22,7 +22,13 @@ extractor.sh                # MKV data extractor based on ffmpeg, mrob_imu_data_
 ```
 
 ## Recording
-`./recoder.py` - launch with no parameters. For now, camera params are stored in a python dictionary, this is an example of the dict:
+Recording process include synchronized data gathering from multiple Azure cameras. To start recording, launch
+```
+./recoder.py
+```
+with no arguments. For now, Camera parameters are predifined in a python dictionary, we plan to move the parameters to a separate file to avoid modification of the source code by mistake. The command-line arguments may be implemented sometime.
+
+This is an example of the dict with camera params:
 ```
 cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
     '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None},
@@ -31,6 +37,7 @@ cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera
 ```
 
 ### Recorded data structure
+Files belonging to a single recording launch are stored in `records/` path. Their names contain date and time of the recrording start:
 ```
 records/
   2022-02-10-08-36-51/
@@ -47,8 +54,10 @@ records/
     recording_params.json
   ...
 ```
-Every path contains MKV files and json dict with parameters of cameras
-`1m` means "1st camera, Master", `2s` means "2nd camera, Subordinate", 
+Every path contains:
+- multiple MKV files (every file correspond to a single cam, `1m` in a file name means "1st camera, Master", `2s` means "2nd camera, Subordinate") and 
+- json dictionary with parameters of cameras (the majority of params are equal to python dict; however, has some updates for some values).  
+
 
 ## Extraction
 ```
