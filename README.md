@@ -16,7 +16,8 @@ Azure-Kinect-Sensor-SDK/tools:
   mrob_recorder                     # modified k4arecorder as a core executable for recorder.py
   mrob_imu_data_extractor           # IMU data extractor from MKV files as a backbone for extractor.sh
   mrob_timestamps_extractor         # timestamps data extractor from MKV files as a backbone for extractor.sh
-  mrob_calibration_params_extractor # New! camera color and depth camera intrinsic and color-to-depth camera extrinsic calib params extractor
+  mrob_calibration_params_extractor # New! camera color and depth camera intrinsic and color-to-depth 
+                                    # camera extrinsic calib params extractor as a backbone for extractor.sh
 recorder.py                         # multi- mrob_recorder launcher for multiple cam recording
 visualizer.py                       # online multi- RGB+D data stream visualizer
 extractor.sh                        # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
