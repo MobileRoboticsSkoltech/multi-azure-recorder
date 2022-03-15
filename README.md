@@ -13,12 +13,13 @@ And follow the building process described in the official Azure Kinect DK API bu
 The following source paths and files are created in addition to original Azure code:  
 ```
 Azure-Kinect-Sensor-SDK/tools:
-  mrob_recorder             # modified k4arecorder as a core executable for recorder.py
-  mrob_imu_data_extractor   # IMU data extractor from MKV files as a backbone for extractor.sh
-  mrob_timestamps_extractor # timestamps data extractor from MKV files as a backbone for extractor.sh
-recorder.py                 # multi- mrob_recorder launcher for multiple cam recording
-visualizer.py               # online multi- RGB+D data stream visualizer
-extractor.sh                # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
+  mrob_recorder                     # modified k4arecorder as a core executable for recorder.py
+  mrob_imu_data_extractor           # IMU data extractor from MKV files as a backbone for extractor.sh
+  mrob_timestamps_extractor         # timestamps data extractor from MKV files as a backbone for extractor.sh
+  mrob_calibration_params_extractor # New! camera color and depth camera intrinsic and color-to-depth camera extrinsic calib params extractor
+recorder.py                         # multi- mrob_recorder launcher for multiple cam recording
+visualizer.py                       # online multi- RGB+D data stream visualizer
+extractor.sh                        # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
 ```
 
 
@@ -71,7 +72,8 @@ Every recorded MKV file contains (if turned on in params)
 Extraction is aimed to
 - extract RGB+D images from video streams,
 - extract IMU data to a CSV file from IMU data stream,
-- extract timestamps and name extracted images by timestamps
+- extract timestamps and name extracted images by timestamps,
+- extract camera color and depth camera intrinsic and color-to-depth camera extrinsic calib params
 from every MKV file.
 
 To extract the data, launch the following script with the `<input path>` argument:
@@ -81,7 +83,7 @@ extractor.sh <input path> # For instance, 'extractor.sh records/2022-02-10-08-36
 
 ### Output data structure
 ```
-output/2022-03-03-17-14-36/
+extracted-data/2022-03-03-17-14-36/
 ├── 1m
 │   ├── color
 │   │   ├── 000000391122.png
@@ -91,6 +93,7 @@ output/2022-03-03-17-14-36/
 │   │   ├── 000000391066.png
 │   │   ├── 000000591066.png
 │   │   ...
+│   ├── calib_params.json
 │   ├── color_timestamps.csv
 │   ├── depth_timestamps.csv
 │   ├── ir_timestamps.csv
@@ -104,6 +107,7 @@ output/2022-03-03-17-14-36/
 │   │   ├── 000000389755.png
 │   │   ├── 000000589755.png
 │   │   ...
+│   ├── calib_params.json
 │   ├── color_timestamps.csv
 │   ├── depth_timestamps.csv
 │   ├── ir_timestamps.csv
