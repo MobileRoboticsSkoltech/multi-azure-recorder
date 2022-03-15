@@ -34,8 +34,8 @@ with no arguments. For now, Camera parameters are predifined in a python diction
 This is an example of the dict with camera params:
 ```
 cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None},
-    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None}
+    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None},
+    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None}
 }
 ```
 
@@ -48,17 +48,26 @@ records/
     2s.mkv
     3s.mkv
     ...
+    1m.csv
+    2s.csv
+    3s.csv
+    ...
     recording_params.json
   2022-02-10-08-53-13/
     1m.mkv
     2s.mkv
     3s.mkv
     ...
+    1m.csv
+    2s.csv
+    3s.csv
+    ...
     recording_params.json
   ...
 ```
 Every path contains:
-- multiple MKV files (every file correspond to a single cam, `1m` in a file name means "1st camera, Master", `2s` means "2nd camera, Subordinate") and 
+- multiple MKV files (every file correspond to a single cam, `1m` in a file name means "1st camera, Master", `2s` means "2nd camera, Subordinate"),
+- multiple CSV files that stores matching of global and local image timestamps, and
 - json dictionary with parameters of cameras (the majority of params are equal to python dict; however, has some updates for some values).  
 
 Every recorded MKV file contains (if turned on in params)
@@ -66,8 +75,8 @@ Every recorded MKV file contains (if turned on in params)
 - D video stream,
 - IMU data stream.
 
-### Visualization during recording
-`visualizer.py` is an additional tool for online image streams visualization. During recording, it can pool temporaly image files (jpg for RGB and binary for D image) created by `mrob_recorder` executable instance. It is not a part of `extractor.py`, but considered to be after solving some issues.
+### Streaming during recording
+`streamer.py` is an additional tool for online image streams visualization. During recording, it can pool temporaly image files (jpg for RGB and binary for D image) created by `mrob_recorder` executable instance. It is not a part of `extractor.py`, but considered to be after solving some issues.
 
 ## Extraction
 Extraction is aimed to
