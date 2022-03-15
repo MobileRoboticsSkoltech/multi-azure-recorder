@@ -11,8 +11,8 @@ import json
 # Recording parameters that updated during script
 # gain???
 cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None},
-    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None},
+    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None},
+    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None},
     #'3' : {'ser_num' : '000000000000', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'resolution' : '720p', 'frame_rate' : '30', 'exposure' : '26000us', 'output_name' : None}
 }
 
@@ -119,14 +119,18 @@ def assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes,
 def create_names_for_path_and_files(cams, master_cam_sticker):
     file_base_name = time.strftime("%Y-%m-%d-%H-%M-%S")
     master_name = f'{master_cam_sticker}m.mkv'#f'{file_base_name}-{master_cam_sticker}m.mkv'
+    ts_table_filename = f'{master_cam_sticker}m.csv'
 
     subordinate_name_template = lambda x : f'{x}s.mkv'#f'{file_base_name}-{x}s.mkv'
+    subordinate_ts_table_filename_template = lambda x : f'{x}s.csv'#f'{file_base_name}-{x}s.mkv'
 
     cams[master_cam_sticker]['output_name'] = master_name
+    cams[master_cam_sticker]['timestamps_table_filename'] = ts_table_filename
 
     for cam_sticker in cams.keys():
         if cam_sticker != master_cam_sticker:
             cams[cam_sticker]['output_name'] = subordinate_name_template(cam_sticker)
+            cams[cam_sticker]['timestamps_table_filename'] = subordinate_ts_table_filename_template(cam_sticker)
     return cams, file_base_name
 #Return: cams, file_base_name
 
@@ -145,12 +149,13 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         exposure = cc['exposure']
         output_name = cc['output_name']
         exposure_setup = f'--exposure-control {exposure}' if exposure is not None else ''
+        ts_table_filename = cc['timestamps_table_filename']
 
         if cam_sticker == master_cam_sticker:
-            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name}'
+            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
-            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name}'
+            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
     return master_cmd_line, subordinate_cmd_lines
@@ -175,7 +180,7 @@ def main():
     os.chdir(path)
 
     # Save parameters dict
-    with open(f'{file_base_name}.json', 'w') as fp:
+    with open('recording_params.json', 'w') as fp:
         json.dump(cams, fp)
 
 
