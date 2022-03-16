@@ -23,6 +23,15 @@ visualizer.py                       # online multi- RGB+D data stream visualizer
 extractor.sh                        # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
 ```
 
+It is also can be needed to increase USB memory buffer. For that, use [this instruction](https://importgeek.wordpress.com/2017/02/26/increase-usbfs-memory-limit-in-ubuntu/).
+
+We also found an issue with old OpenGL version when using Azure SDK (to be more precise, this problem comes from depth engine) on Ubuntu 18.04 with Intel integrated graphics. One of the solutions is [installing open source Mesa drivers](https://itsfoss.com/install-mesa-ubuntu/). But still, we are not sure if it is the best solution. With up-to-date Nvidia GPU drivers there should not be problems.
+
+The `ffmpeg` is also required for running extractor:
+```shell
+sudo apt-get install ffmpeg
+```
+
 
 ## Recording
 Recording process include synchronized data gathering from multiple Azure cameras. To start recording, launch
