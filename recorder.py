@@ -11,9 +11,8 @@ import json
 # Recording parameters that updated during script
 # gain???
 cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None},
-    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None},
-    #'3' : {'ser_num' : '000000000000', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'resolution' : '720p', 'frame_rate' : '30', 'exposure' : '26000us', 'output_name' : None}
+    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '30', 'exposure' : '-11', 'output_name' : None, 'timestamps_table_filename' : None},
+    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 160, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '30', 'exposure' : '0', 'output_name' : None, 'timestamps_table_filename' : None}
 }
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
@@ -143,6 +142,7 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         cc = cams[cam_sticker]
         index = cc['index']
         sync_delay = cc['sync_delay']
+        depth_delay = cc['depth_delay']
         depth_mode = cc['depth_mode']
         color_mode = cc['color_mode']
         frame_rate = cc['frame_rate']
@@ -152,10 +152,10 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         ts_table_filename = cc['timestamps_table_filename']
 
         if cam_sticker == master_cam_sticker:
-            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
+            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
-            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
+            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
     return master_cmd_line, subordinate_cmd_lines
@@ -205,3 +205,4 @@ def main():
 
 if __name__ == '__main__':
     main()#sys.argv)
+
