@@ -32,6 +32,12 @@ The `ffmpeg` is also required for running extractor:
 sudo apt-get install ffmpeg
 ```
 
+For `streamer.py` `numpy`, `python3-tk`, `python3-pil`, `python3-pil.imagetk` packages are needed
+```
+sudo apt-get install python3-tk python3-pil python3-pil.imagetk python3-pip
+pip3 install numpy
+```
+
 
 ## Recording
 Recording process include synchronized data gathering from multiple Azure cameras. To start recording, launch
