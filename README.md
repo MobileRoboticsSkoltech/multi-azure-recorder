@@ -58,27 +58,27 @@ cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera
 Files belonging to a single recording launch are stored in `records/` path. Their names contain date and time of the recrording start:
 ```
 records/
-  2022-02-10-08-36-51/
-    1m.mkv
-    2s.mkv
-    3s.mkv
-    ...
-    1m.csv
-    2s.csv
-    3s.csv
-    ...
-    recording_params.json
-  2022-02-10-08-53-13/
-    1m.mkv
-    2s.mkv
-    3s.mkv
-    ...
-    1m.csv
-    2s.csv
-    3s.csv
-    ...
-    recording_params.json
-  ...
+├── 2022-02-10-08-36-51/
+│   ├── 1m.mkv
+│   ├── 2s.mkv
+│   ├── 3s.mkv
+│   ├── ...
+│   ├── 1m.csv
+│   ├── 2s.csv
+│   ├── 3s.csv
+│   ├── ...
+│   └── recording_params.json
+├── 2022-02-10-08-53-13/
+│   ├── 1m.mkv
+│   ├── 2s.mkv
+│   ├── 3s.mkv
+│   ├── ...
+│   ├── 1m.csv
+│   ├── 2s.csv
+│   ├── 3s.csv
+│   ├── ...
+│   └── recording_params.json
+...
 ```
 Every path contains:
 - multiple MKV files (every file correspond to a single cam, `1m` in a file name means "1st camera, Master", `2s` means "2nd camera, Subordinate"),
