@@ -12,7 +12,7 @@ class Application(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.title('mrob_viewer')
-        self.geometry("836x580")
+        self.geometry("836x870")
         self.resizable(width=False, height=False)
         #self.label = tk.Label(self)
         #self.label.pack()
@@ -26,6 +26,11 @@ class Application(tk.Tk):
         self.label3.grid(row=2, column=1)
         self.label4 = tk.Label(self)
         self.label4.grid(row=2, column=2)
+
+        self.label5 = tk.Label(self)
+        self.label5.grid(row=3, column=1)
+        self.label6 = tk.Label(self)
+        self.label6.grid(row=3, column=2)
 
         self.duration_ms = 100
         self.n = 1
@@ -72,6 +77,17 @@ class Application(tk.Tk):
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
             self.next_image4 = ImageTk.PhotoImage(image)
             self.label4.config(image=self.next_image4)
+
+            image = Image.open('/tmp/000489713912_color.jpg')
+            image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
+            self.next_image5 = ImageTk.PhotoImage(image)
+            self.label5.config(image=self.next_image5)
+            
+            array = np.fromfile('/tmp/000489713912_depth.bin', dtype=np.uint16)
+            array = rescale(array)
+            image = Image.fromarray(array.reshape(576,640)[::2,::2])
+            self.next_image6 = ImageTk.PhotoImage(image)
+            self.label6.config(image=self.next_image6)
         except:
             pass
 
