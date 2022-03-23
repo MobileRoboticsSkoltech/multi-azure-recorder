@@ -1,0 +1,19 @@
+%YAML:1.0
+---
+K: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 611.050659, 0., 638.414490, 
+           0., 610.763855, 367.955139, 
+           0., 0., 1. ]
+dist: !!opencv-matrix
+   rows: 8
+   cols: 1
+   dt: d
+   data: [ 0.694481, -2.708230, 0.001196, -0.000093, 1.427999, 0.569216, -2.537520, 1.363558 ]
+img_size: !!opencv-matrix
+   rows: 2
+   cols: 1
+   dt: i
+   data: [ 1280, 720 ]
