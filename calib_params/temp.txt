@@ -1,0 +1,168 @@
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 8.79690362e-01]
+ [-4.45994597e-04]
+ [-8.88795028e-03]]
+Rotation camera B to A:
+[[ 0.92566005  0.00517017 -0.37832096]
+ [ 0.00235684  0.99980844  0.0194301 ]
+ [ 0.37834894 -0.01887731  0.92547054]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00031133300196919364
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 0.16803796723193393
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 8.79690362e-01]
+ [-4.45994597e-04]
+ [-8.88795028e-03]]
+Rotation camera B to A:
+[[ 0.92566005  0.00517017 -0.37832096]
+ [ 0.00235684  0.99980844  0.0194301 ]
+ [ 0.37834894 -0.01887731  0.92547054]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00031133300196919364
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 0.16803796723193393
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 8.79690362e-01]
+ [-4.45994597e-04]
+ [-8.88795028e-03]]
+Rotation camera B to A:
+[[ 0.92566005  0.00517017 -0.37832096]
+ [ 0.00235684  0.99980844  0.0194301 ]
+ [ 0.37834894 -0.01887731  0.92547054]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00031133300196919364
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 0.16803796723193393
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[-0.89607055]
+ [-0.00576836]
+ [-0.01142458]]
+Rotation camera B to A:
+[[ 0.91586418 -0.01916815  0.40103041]
+ [ 0.00770254  0.99951471  0.03018315]
+ [-0.40141435 -0.02455471  0.91556736]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.0003113330020034824
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 0.1783275622590576
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[-1.64472321]
+ [-0.01445445]
+ [ 0.66935658]]
+Rotation camera B to A:
+[[ 0.69592234 -0.02467774  0.71769291]
+ [ 0.02001387  0.99968766  0.01496732]
+ [-0.71783811  0.00394772  0.69619887]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00048248686573063785
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 1.2960377297186283
+Traceback (most recent call last):
+  File "./Azure-Kinect-Sensor-SDK/examples/calibration_registration/register.py", line 48, in <module>
+    args.out_dir)
+  File "/home/shareduser/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/examples/calibration_registration/camera_tools.py", line 738, in register
+    raise RegistrationError("Registration error from B to A too large.")
+camera_tools.RegistrationError: Registration error from B to A too large.
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 1.62537856]
+ [-0.02878055]
+ [ 0.71461724]]
+Rotation camera B to A:
+[[ 0.69592234  0.02001387 -0.71783811]
+ [-0.02467774  0.99968766  0.00394772]
+ [ 0.71769291  0.01496732  0.69619887]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.0004783628995530599
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 1.5986346916616114
+Traceback (most recent call last):
+  File "./Azure-Kinect-Sensor-SDK/examples/calibration_registration/register.py", line 48, in <module>
+    args.out_dir)
+  File "/home/shareduser/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/examples/calibration_registration/camera_tools.py", line 738, in register
+    raise RegistrationError("Registration error from B to A too large.")
+camera_tools.RegistrationError: Registration error from B to A too large.
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 1.62537856]
+ [-0.02878055]
+ [ 0.71461724]]
+Rotation camera B to A:
+[[ 0.69592234  0.02001387 -0.71783811]
+ [-0.02467774  0.99968766  0.00394772]
+ [ 0.71769291  0.01496732  0.69619887]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.0004783628995530599
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 1.5986346916616114
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[-1.64472321]
+ [-0.01445445]
+ [ 0.66935658]]
+Rotation camera B to A:
+[[ 0.69592234 -0.02467774  0.71769291]
+ [ 0.02001387  0.99968766  0.01496732]
+ [-0.71783811  0.00394772  0.69619887]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00048248686573063785
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 1.2960377297186283
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 0.88874352]
+ [ 0.00094387]
+ [-0.00136853]]
+Rotation camera B to A:
+[[ 0.92323709  0.0048671  -0.38419993]
+ [ 0.00235143  0.99982947  0.01831649]
+ [ 0.38422356 -0.01781388  0.92306821]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00046290236486847604
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 0.2589689017221314
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[-1.65036327]
+ [-0.010997  ]
+ [ 0.67210971]]
+Rotation camera B to A:
+[[ 0.69576038 -0.02176323  0.71794419]
+ [ 0.01883126  0.99974998  0.01205629]
+ [-0.71802708  0.0051315   0.69599625]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.0002446519612428699
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 1.2614947833992658
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[-0.89321108]
+ [-0.00162127]
+ [-0.01487798]]
+Rotation camera B to A:
+[[ 0.91830939 -0.01719827  0.39548967]
+ [ 0.00731235  0.99962232  0.02649064]
+ [-0.39579589 -0.02143464  0.91808832]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.0004629023648777006
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 0.2935465165909147
+shareduser@base:~/projects/multi-azure-recorder$ ./calibrate.sh 
+Translation camera B to A:
+[[ 1.63105743]
+ [-0.02837193]
+ [ 0.71721546]]
+Rotation camera B to A:
+[[ 0.69576038  0.01883126 -0.71802708]
+ [-0.02176323  0.99974998  0.0051315 ]
+ [ 0.71794419  0.01205629  0.69599625]]
+Find forward reprojection error (camera B to camera A).
+RMS (Radians): 0.00028561333700575896
+Find reverse reprojection error (camera A to camera B).
+RMS (Radians): 1.5584068042503838
