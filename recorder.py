@@ -7,13 +7,19 @@ import collections
 import time
 import shutil
 import json
+import argparse
+
+
+LITERALS_DEFAULT = "def"
+LITERALS_NONE = "none"
+
 
 # Recording parameters that updated during script
 # gain???
-cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '15', 'exposure' : '0', 'output_name' : None, 'timestamps_table_filename' : None},
-    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '15', 'exposure' : '0', 'output_name' : None, 'timestamps_table_filename' : None},
-    '9' : {'ser_num' : '000489713912', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '15', 'exposure' : '-7', 'output_name' : None, 'timestamps_table_filename' : None}
+DEFAULT_PARAMS = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
+    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 15, 'exposure' : 0, 'output_name' : None, 'timestamps_table_filename' : None},
+    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 15, 'exposure' : 0, 'output_name' : None, 'timestamps_table_filename' : None},
+    '9' : {'ser_num' : '000489713912', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 15, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None}
 }
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
@@ -116,8 +122,11 @@ def assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes,
 
 # Prepare names for path and files
 # Params: master_cam_sticker, cams
-def create_names_for_path_and_files(cams, master_cam_sticker):
-    file_base_name = time.strftime("%Y-%m-%d-%H-%M-%S")
+def create_names_for_path_and_files(cams, master_cam_sticker, output_path=None):
+    if output_path is None:
+        file_base_name = time.strftime("%Y-%m-%d-%H-%M-%S")
+    else:
+        file_base_name = output_path
     master_name = f'{master_cam_sticker}m.mkv'#f'{file_base_name}-{master_cam_sticker}m.mkv'
     ts_table_filename = f'{master_cam_sticker}m.csv'
 
@@ -162,15 +171,68 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
     return master_cmd_line, subordinate_cmd_lines
 # Return: master_cmd_line, subordinate_cmd_lines
 
+
+def int_or_str_type(value):
+    value = value.lower()
+    if value != LITERALS_DEFAULT and value != LITERALS_NONE:
+        return int(value)
+    return value
+
+
+def bool_or_str_type(value):
+    value = value.lower()
+    if value != LITERALS_DEFAULT and value != LITERALS_NONE:
+        return True if value == "true" else False
+    return value
+
+
+def process_arguments(args):
+    # Use all cameras from default config or only specified cameras
+    if args["stickers"] is not None:
+        stickers = args["stickers"]
+    else:
+        stickers = DEFAULT_PARAMS.keys()
+
+    cameras_params = {sticker: {} for sticker in stickers}
+
+    for camera_sticker_idx, camera_sticker in enumerate(stickers):
+        # Get possible parameters from default params
+        for param_name, param_default_value in DEFAULT_PARAMS[camera_sticker].items():
+            # If parameter was not specified in CLI or was specified as "default"
+            if args[param_name] is None or args[param_name][camera_sticker_idx] == LITERALS_DEFAULT:
+                cameras_params[camera_sticker][param_name] = param_default_value
+            # If parameter was specified as "none"
+            elif args[param_name][camera_sticker_idx] == LITERALS_NONE:
+                cameras_params[camera_sticker][param_name] = None
+            # If parameter was specified as normal value
+            else:
+                cameras_params[camera_sticker][param_name] = args[param_name][camera_sticker_idx]
+
+    return cameras_params
+
+
 def main():
-    global cams
+    argument_parser = argparse.ArgumentParser("Recorder script")
+    argument_parser.add_argument("--stickers", type=str, required=False, nargs="+")
+    argument_parser.add_argument("--ser_num", type=str, required=False, nargs="+")
+    argument_parser.add_argument("--master", type=bool_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--sync_delay", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--depth_delay", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--depth_mode", type=str, required=False, nargs="+")
+    argument_parser.add_argument("--color_mode", type=str, required=False, nargs="+")
+    argument_parser.add_argument("--frame_rate", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--exposure", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--output_path", type=str, required=False)
+    args = argument_parser.parse_args()
+
+    cams = process_arguments(vars(args))
 
     master_cam_sticker = get_predefined_master_cam_sticker(cams)
     predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
     connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
     connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
     cams = assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes, cams)
-    cams, file_base_name = create_names_for_path_and_files(cams, master_cam_sticker)
+    cams, file_base_name = create_names_for_path_and_files(cams, master_cam_sticker, args.output_path)
     master_cmd_line, subordinate_cmd_lines = prepare_recording_command_lines(cams, master_cam_sticker)
 
     # Create path
@@ -206,4 +268,3 @@ def main():
 
 if __name__ == '__main__':
     main()#sys.argv)
-
