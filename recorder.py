@@ -199,7 +199,7 @@ def process_arguments(args):
         # Get possible parameters from default params
         for param_name, param_default_value in DEFAULT_PARAMS[camera_sticker].items():
             # If parameter was not specified in CLI or was specified as "default"
-            if args[param_name] is None or args[param_name][camera_sticker_idx] == LITERALS_DEFAULT:
+            if param_name not in args or args[param_name] is None or args[param_name][camera_sticker_idx] == LITERALS_DEFAULT:
                 cameras_params[camera_sticker][param_name] = param_default_value
             # If parameter was specified as "none"
             elif args[param_name][camera_sticker_idx] == LITERALS_NONE:
