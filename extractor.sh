@@ -2,6 +2,11 @@
 
 #Usage: bash extractor input_directory output_directory
 
+if [ "$#" -ne 1 ]; then
+    echo "Usage: extractor input_directory"
+    exit
+fi
+
 #This block is to get exact path of the current script since internal structure of the repo path assumed to be constant
 #and Azure tools are inside
 SOURCE=${BASH_SOURCE[0]}
