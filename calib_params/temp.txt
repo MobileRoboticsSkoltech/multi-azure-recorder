@@ -166,3 +166,166 @@ Find forward reprojection error (camera B to camera A).
 RMS (Radians): 0.00028561333700575896
 Find reverse reprojection error (camera A to camera B).
 RMS (Radians): 1.5584068042503838
+
+
+
+
+
+
+shareduser@apio:~/projects/multi-azure-recorder$ ./Azure-Kinect-Sensor-SDK/build/bin/AzureKinectFirmwareTool -q
+ == Azure Kinect DK Firmware Tool == 
+Device Serial Number: 000489713912
+Current Firmware Versions:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Device Serial Number: 000905794612
+Current Firmware Versions:
+  RGB camera firmware:      1.6.102
+  Depth camera firmware:    1.6.75
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Device Serial Number: 000583592412
+Current Firmware Versions:
+  RGB camera firmware:      1.6.102
+  Depth camera firmware:    1.6.75
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+shareduser@apio:~/projects/multi-azure-recorder$ cd Azure-Kinect-Sensor-SDK/build/bin/
+shareduser@apio:~/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/build/bin$ ./AzureKinectFirmwareTool -u ../../firmware/AzureKinectDK_Fw_1.6.110080014.bin 000583592412
+ == Azure Kinect DK Firmware Tool == 
+Loading firmware package ../../firmware/AzureKinectDK_Fw_1.6.110080014.bin.
+File size: 1294306 bytes
+This package contains:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config files: 6109.7 5006.27 
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+  Signature Type:           Microsoft
+
+Device Serial Number: 000583592412
+Current Firmware Versions:
+  RGB camera firmware:      1.6.102
+  Depth camera firmware:    1.6.75
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Please wait, updating device firmware. Don't unplug the device. This operation can take a few minutes...
+libusb: error [udev_hotplug_event] ignoring udev action bind
+
+Resetting Azure Kinect S/N: 000583592412
+Waiting for reset of S/N: 000583592412 to complete.
+libusb: error [udev_hotplug_event] ignoring udev action bind
+Reset of S/N: 000583592412 completed successfully.
+
+SUCCESS: The firmware has been successfully updated.
+
+
+shareduser@apio:~/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/build/bin$ ./AzureKinectFirmwareTool -q
+ == Azure Kinect DK Firmware Tool == 
+Device Serial Number: 000489713912
+Current Firmware Versions:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Device Serial Number: 000905794612
+Current Firmware Versions:
+  RGB camera firmware:      1.6.102
+  Depth camera firmware:    1.6.75
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Device Serial Number: 000583592412
+Current Firmware Versions:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+shareduser@apio:~/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/build/bin$ ./AzureKinectFirmwareTool -u ../../firmware/AzureKinectDK_Fw_1.6.110080014.bin 000583592412^C
+shareduser@apio:~/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/build/bin$ ./AzureKinectFirmwareTool -u ../../firmware/AzureKinectDK_Fw_1.6.110080014.bin 000905794612
+ == Azure Kinect DK Firmware Tool == 
+Loading firmware package ../../firmware/AzureKinectDK_Fw_1.6.110080014.bin.
+File size: 1294306 bytes
+This package contains:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config files: 6109.7 5006.27 
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+  Signature Type:           Microsoft
+
+Device Serial Number: 000905794612
+Current Firmware Versions:
+  RGB camera firmware:      1.6.102
+  Depth camera firmware:    1.6.75
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Please wait, updating device firmware. Don't unplug the device. This operation can take a few minutes...
+libusb: error [udev_hotplug_event] ignoring udev action bind
+
+Resetting Azure Kinect S/N: 000905794612
+Waiting for reset of S/N: 000905794612 to complete.
+libusb: error [udev_hotplug_event] ignoring udev action bind
+libusb: error [udev_hotplug_event] ignoring udev action bind
+Reset of S/N: 000905794612 completed successfully.
+
+SUCCESS: The firmware has been successfully updated.
+
+
+shareduser@apio:~/projects/multi-azure-recorder/Azure-Kinect-Sensor-SDK/build/bin$ ./AzureKinectFirmwareTool -q
+ == Azure Kinect DK Firmware Tool == 
+Device Serial Number: 000489713912
+Current Firmware Versions:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Device Serial Number: 000905794612
+Current Firmware Versions:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+Device Serial Number: 000583592412
+Current Firmware Versions:
+  RGB camera firmware:      1.6.110
+  Depth camera firmware:    1.6.80
+  Depth config file:        6109.7
+  Audio firmware:           1.6.14
+  Build Config:             Production
+  Certificate Type:         Microsoft
+
+
