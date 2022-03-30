@@ -5,11 +5,15 @@ from PIL import Image, ImageTk
 from itertools import cycle
 import numpy as np
 import sys
+import argparse
+
 
 class Application(tk.Tk):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, flip, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+
+        self.flip = flip
 
         self.title('mrob_viewer')
         self.geometry("836x870")
@@ -58,34 +62,46 @@ class Application(tk.Tk):
         try:
             image = Image.open('/tmp/000583592412_color.jpg')
             image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
+            if self.flip:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image = ImageTk.PhotoImage(image)
             self.label1.config(image=self.next_image)
             
             array = np.fromfile('/tmp/000583592412_depth.bin', dtype=np.uint16)
             array = rescale(array)            
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
+            if self.flip:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image2 = ImageTk.PhotoImage(image)
             self.label2.config(image=self.next_image2)
 
             image = Image.open('/tmp/000905794612_color.jpg')
             image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
+            if self.flip:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image3 = ImageTk.PhotoImage(image)
             self.label3.config(image=self.next_image3)
             
             array = np.fromfile('/tmp/000905794612_depth.bin', dtype=np.uint16)
             array = rescale(array)
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
+            if self.flip:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image4 = ImageTk.PhotoImage(image)
             self.label4.config(image=self.next_image4)
 
             image = Image.open('/tmp/000489713912_color.jpg')
             image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
+            if self.flip:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image5 = ImageTk.PhotoImage(image)
             self.label5.config(image=self.next_image5)
             
             array = np.fromfile('/tmp/000489713912_depth.bin', dtype=np.uint16)
             array = rescale(array)
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
+            if self.flip:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image6 = ImageTk.PhotoImage(image)
             self.label6.config(image=self.next_image6)
         except:
@@ -97,7 +113,17 @@ class Application(tk.Tk):
         self.display_next_slide()
 
 def main():
-    application = Application()
+    argument_parser = argparse.ArgumentParser("Multiview streamer")
+    argument_parser.add_argument("--flip", "-f", type=int, required=False, default=0)
+    args = argument_parser.parse_args()
+    if args.flip == 0:
+        flip = False
+    elif args.flip == 1:
+        flip = True
+    else:
+        raise RuntimeError("Only 0 and 1 values allowed for flip parameter")
+
+    application = Application(flip)
     application.start()
     application.mainloop()
 
