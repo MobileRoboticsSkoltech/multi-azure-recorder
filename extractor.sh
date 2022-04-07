@@ -2,8 +2,8 @@
 
 #Usage: bash extractor input_directory output_directory
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: extractor input_directory"
+if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
+    echo "Usage: extractor input_directory or extractor input_directory output_directory"
     exit
 fi
 
@@ -22,7 +22,11 @@ IMU_DATA_EXTRACTOR_EXE="Azure-Kinect-Sensor-SDK/build/bin/mrob_imu_data_extracto
 CALIB_PARAMS_EXTRACTOR_EXE="Azure-Kinect-Sensor-SDK/build/bin/mrob_calibration_params_extractor"
 
 input_path="$1"
-output_path="$DIR/extracted-data/$(basename -- $1)"
+if [ "$#" -eq 1 ]; then
+    output_path="$DIR/extracted-data/$(basename -- $1)"
+else
+	output_path="$2/$(basename -- $1)"
+fi
 
 rm -rf $output_path
 
