@@ -99,15 +99,12 @@ def process_subject_dir_extract_only(subject_dir: Path, output_root_dir: Path):
 
 
 def extract_record(record_dir: Path, extraction_output_dir: Path):
-    # print(f"\n        Extracting {record_dir} to {extraction_output_dir}")
-    # p = subprocess.Popen(f"./extractor.sh {record_dir} {extraction_output_dir}", shell=True)
-    # p.wait()
+    print(f"\n        Extracting {record_dir} to {extraction_output_dir}")
+    p = subprocess.Popen(f"./extractor.sh {record_dir} {extraction_output_dir}", shell=True)
+    p.wait()
     for camera in CAMERAS.keys():
         csv_file_name = camera + ".csv"
         shutil.copy(str(record_dir / csv_file_name), str(extraction_output_dir / record_dir.name / camera / csv_file_name))
-    print(record_dir)
-    print(extraction_output_dir)
-
 
 
 def do_sort_only_mode(args):
@@ -157,37 +154,26 @@ def sort_gesture_set(gesture_set: str, subject_dir: Path, subject_output_dir: Pa
     n_trials = 0
 
     for camera in CAMERAS.keys():
-        print(f"\nCamera {camera} ({CAMERAS[camera]})")
+        print(f"\n        Camera {camera} ({CAMERAS[camera]})")
         for modality in MODALITIES:
-            print(f"Modality {modality}")
-            max_idx = None
+            print(f"        Modality {modality}")
             for idx in reversed(gesture_set_df.index):
                 gesture_name = gesture_set_df.loc[idx, "gesture"]
-                if idx != 0:
-                    t0 = gesture_set_df.loc[idx - 1, "t1_1"]
-                else:
-                    t0 = gesture_set_df.loc[idx, "t0_1"]
+                t0 = gesture_set_df.loc[idx, "t0_1"]
                 t1 = gesture_set_df.loc[idx, "t1_1"]
-                offset = int(1e+5)
-                # if idx == len(gesture_set_df) - 1:
-                #     offset = int(1e+5)
-                # else:
-                #     offset = int(1e+5)
                 trial = gesture_set_df.loc[idx, "trial"]
                 if trial > n_trials:
                     n_trials = trial
                 is_bad = gesture_set_df.loc[idx, "is_bad"]
-                max_idx = sort_camera_modality_frames(subject_dir / gesture_set, subject_output_dir, gesture_name, hand,
-                                                      t0, t1, trial, is_bad, camera, modality, trial_offset,
-                                                      max_idx=max_idx, last_frame_offset=offset)
+                sort_camera_modality_frames(subject_dir / gesture_set, subject_output_dir, gesture_name, hand,
+                                            t0, t1, trial, is_bad, camera, modality, trial_offset)
         
     return n_trials
 
 
 def sort_camera_modality_frames(gesture_set_dir: Path, subject_output_dir: Path, gesture_name: str, hand: str,
                                 t0: int, t1: int, trial: int, is_bad: bool,
-                                camera: str, modality: str, trial_offset: int,
-                                max_idx: Optional[int] = None, last_frame_offset: Optional[int] = None) -> int:
+                                camera: str, modality: str, trial_offset: int) -> int:
     trial_output_dir = subject_output_dir / gesture_name / hand / f"trial{trial + trial_offset}"
     trial_output_dir.mkdir(parents=True, exist_ok=True)
     frames_output_dir = trial_output_dir / CAMERAS[camera] / modality
@@ -196,27 +182,32 @@ def sort_camera_modality_frames(gesture_set_dir: Path, subject_output_dir: Path,
     frames_dir = gesture_set_dir / camera / modality
     frames = [e.name.split(".")[0] for e in sorted(frames_dir.glob("*.png"))]
 
-    reference_time_delta = t1 - t0
-
-    if max_idx is not None:
-        last_frame_idx = max_idx
-    else:
-        last_frame_idx = len(frames) - 1
-
-    if last_frame_offset is not None:
-        for i in reversed(range(0, last_frame_idx)):
-            if int(frames[last_frame_idx]) - int(frames[i]) > last_frame_offset:
-                last_frame_idx = i + 1
-                break
-
-    first_frame_idx = 0
-    for i in reversed(range(0, len(frames) - 1)):
-        if int(frames[last_frame_idx]) - int(frames[i]) > reference_time_delta:
-            first_frame_idx = i + 1
-            break
+    camera_timestamps_df = pd.read_csv(str(gesture_set_dir / camera / (camera + ".csv")))
+    t0_us = None
+    t1_us = None
+    for _, row in camera_timestamps_df.iterrows():
+        camera_t = row[modality + "_ts_us"]
+        global_t = row["global_ts_us"]
+        if global_t >= t0 and t0_us is None:
+            t0_us = camera_t
+        if global_t >= t1 and t1_us is None:
+            t1_us = camera_t
     
-    gesture_frames = frames[first_frame_idx:(last_frame_idx + 1)]
-    print(f"            Gest: {gesture_name}, trial: {trial} Len: {len(gesture_frames)}, first: {first_frame_idx}, last: {last_frame_idx}, offset: {last_frame_offset}")
+    start_frame_idx = None
+    end_frame_idx = None
+    for i in range(len(frames)):
+        if int(frames[i]) >= t0_us and start_frame_idx is None:
+            start_frame_idx = i
+        if int(frames[i]) >= t1_us and end_frame_idx is None:
+            end_frame_idx = i
+    
+    gesture_frames = frames[start_frame_idx:(end_frame_idx + 1)]
+    fps = int(round(len(gesture_frames) / ((t1_us - t0_us) * 1e-6), 0))
+    print(f"                Gesture: {gesture_name}" + \
+          f"                Trial: {trial}" + \
+          f"                Length: {len(gesture_frames)}",
+          f"                FPS: {fps}")
+    # print(f"            Gest: {gesture_name}, trial: {trial} Len: {len(gesture_frames)}, first: {first_frame_idx}, last: {last_frame_idx}, offset: {last_frame_offset}")
 
     for gesture_frame in gesture_frames:
         frame_file = gesture_frame + ".png"
@@ -224,8 +215,6 @@ def sort_camera_modality_frames(gesture_set_dir: Path, subject_output_dir: Path,
     
     is_bad_mark_file = trial_output_dir / ("bad" if is_bad else "good")
     is_bad_mark_file.touch(exist_ok=True)
-
-    return first_frame_idx
 
 
 def main():
