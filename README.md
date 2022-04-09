@@ -8,7 +8,9 @@ To start usage of the code, clone the repo with already modified Azure SDK:
 git clone --recurse-submodules https://github.com/MobileRoboticsSkoltech/multi-azure-recorder
 ```
 
-And follow the building process described in the official Azure Kinect DK API building instructions (__the root path there is Azure-Kinect-Sensor-SDK path__): [link](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/building.md). No additional actions are needed since our modifications are already implemented to the SDK. 
+And follow the building process described in the official Azure Kinect DK API building instructions (__the root path there is Azure-Kinect-Sensor-SDK path__): [link](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/building.md).
+In order to use the Azure Kinect SDK with the device and without being 'root', [this](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/usage.md#linux-device-setupshould) also must be done.
+No additional actions are needed since our modifications are already implemented to the SDK. 
 
 The following source paths and files are created in addition to original Azure code:  
 ```
