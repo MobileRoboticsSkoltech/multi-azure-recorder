@@ -34,6 +34,7 @@ for mkv_path in $(find $input_path -name '*.mkv' | sed 's,.*/,,' | sed  's,.mkv,
 	do
 
 	mkdir -p $output_path/$mkv_path/{color,depth}
+	cp $input_path/$mkv_path'.csv' $output_path/$mkv_path/global_timestamps.csv
 
 	ffmpeg -i $input_path/$mkv_path'.mkv' -map 0:0 -vsync 0 $output_path/$mkv_path/color/%d.png
 	ffmpeg -i $input_path/$mkv_path'.mkv' -map 0:1 -vsync 0 $output_path/$mkv_path/depth/%d.png
