@@ -60,14 +60,14 @@ class Application(tk.Tk):
             return out.astype(np.uint8)
         
         try:
-            image = Image.open('/tmp/000583592412_color.jpg')
+            image = Image.open('/mnt/mrob_tmpfs/000583592412_color.jpg')
             image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
             if self.flip:
                 image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image = ImageTk.PhotoImage(image)
             self.label1.config(image=self.next_image)
             
-            array = np.fromfile('/tmp/000583592412_depth.bin', dtype=np.uint16)
+            array = np.fromfile('/mnt/mrob_tmpfs/000583592412_depth.bin', dtype=np.uint16)
             array = rescale(array)            
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
             if self.flip:
@@ -75,14 +75,14 @@ class Application(tk.Tk):
             self.next_image2 = ImageTk.PhotoImage(image)
             self.label2.config(image=self.next_image2)
 
-            image = Image.open('/tmp/000905794612_color.jpg')
+            image = Image.open('/mnt/mrob_tmpfs/000905794612_color.jpg')
             image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
             if self.flip:
                 image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image3 = ImageTk.PhotoImage(image)
             self.label3.config(image=self.next_image3)
             
-            array = np.fromfile('/tmp/000905794612_depth.bin', dtype=np.uint16)
+            array = np.fromfile('/mnt/mrob_tmpfs/000905794612_depth.bin', dtype=np.uint16)
             array = rescale(array)
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
             if self.flip:
@@ -90,14 +90,14 @@ class Application(tk.Tk):
             self.next_image4 = ImageTk.PhotoImage(image)
             self.label4.config(image=self.next_image4)
 
-            image = Image.open('/tmp/000489713912_color.jpg')
+            image = Image.open('/mnt/mrob_tmpfs/000489713912_color.jpg')
             image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
             if self.flip:
                 image = image.transpose(Image.FLIP_LEFT_RIGHT)
             self.next_image5 = ImageTk.PhotoImage(image)
             self.label5.config(image=self.next_image5)
             
-            array = np.fromfile('/tmp/000489713912_depth.bin', dtype=np.uint16)
+            array = np.fromfile('/mnt/mrob_tmpfs/000489713912_depth.bin', dtype=np.uint16)
             array = rescale(array)
             image = Image.fromarray(array.reshape(576,640)[::2,::2])
             if self.flip:

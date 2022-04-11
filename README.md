@@ -3,12 +3,15 @@ This repo contains tools for synchronized RGB+D data recording and extraction fr
 
 
 ## Building
+### Azure SDK
 To start usage of the code, clone the repo with already modified Azure SDK:
 ```
 git clone --recurse-submodules https://github.com/MobileRoboticsSkoltech/multi-azure-recorder
 ```
 
-And follow the building process described in the official Azure Kinect DK API building instructions (__the root path there is Azure-Kinect-Sensor-SDK path__): [link](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/building.md). No additional actions are needed since our modifications are already implemented to the SDK. 
+And follow the building process described in the official Azure Kinect DK API building instructions (__the root path there is Azure-Kinect-Sensor-SDK path__): [link](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/building.md).
+In order to use the Azure Kinect SDK with the device and without being 'root', [this](https://github.com/MobileRoboticsSkoltech/Azure-Kinect-Sensor-SDK/blob/e2d43f199956b3b40abd5d3a0d8eb6575699b9ae/docs/usage.md#linux-device-setupshould) also must be done.
+No additional actions are needed since our modifications are already implemented to the SDK. 
 
 The following source paths and files are created in addition to original Azure code:  
 ```
@@ -22,22 +25,43 @@ recorder.py                         # multi- mrob_recorder launcher for multiple
 visualizer.py                       # online multi- RGB+D data stream visualizer
 extractor.sh                        # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
 ```
-
-It is also can be needed to increase USB memory buffer. For that, use [this instruction](https://importgeek.wordpress.com/2017/02/26/increase-usbfs-memory-limit-in-ubuntu/).
-
-We also found an issue with old OpenGL version when using Azure SDK (to be more precise, this problem comes from depth engine) on Ubuntu 18.04 with Intel integrated graphics. One of the solutions is [installing open source Mesa drivers](https://itsfoss.com/install-mesa-ubuntu/). But still, we are not sure if it is the best solution. With up-to-date Nvidia GPU drivers there should not be problems.
-
+### RAM utilization
+We use RAM folder for temporary data sharing instead of hard drive frequent read-write stress. For that, three steps must be performed (according to [askubuntu](https://askubuntu.com/questions/597268/virtual-ram-folder-in-ubuntu)).
+1. Make the folder you want to mount the ram disk to (__must be `/mnt/mrob_tmpfs` everywhere__):
+```
+sudo mkdir /mnt/mrob_tmpfs
+```
+2. Create a ram disk. The size chosen to be 512MB, however can be decreased just in case.
+```
+sudo mount -t tmpfs -o size=512m tmpfs /mnt/mrob_tmpfs
+```
+3. Make mount permanent.
+- open `/etc/fstab` in nano:
+```
+sudo nano /etc/fstab
+```
+- add the following line to that file and save the file:
+```
+tmpfs       /mnt/mrob_tmpfs tmpfs nodev,nosuid,noexec,nodiratime,size=512M   0 0
+```
+### Additional packages setup
+#### ffmpef for extractor
 The `ffmpeg` is also required for running extractor:
 ```shell
 sudo apt-get install ffmpeg
 ```
-
+#### python packages for streamer
 For `streamer.py` `numpy`, `python3-tk`, `python3-pil`, `python3-pil.imagetk` packages are needed
 ```
 sudo apt-get install python3-tk python3-pil python3-pil.imagetk python3-pip
 pip3 install numpy
 ```
 
+### (in case of problems) USB bufer increase
+It is also can be needed to increase USB memory buffer. For that, use [this instruction](https://importgeek.wordpress.com/2017/02/26/increase-usbfs-memory-limit-in-ubuntu/).
+
+### (in case of problems) Depth engine setup
+We also found an issue with old OpenGL version when using Azure SDK (to be more precise, this problem comes from depth engine) on Ubuntu 18.04 with Intel integrated graphics. One of the solutions is [installing open source Mesa drivers](https://itsfoss.com/install-mesa-ubuntu/). But still, we are not sure if it is the best solution. With up-to-date Nvidia GPU drivers there should not be problems.
 
 ## Recording
 Recording process include synchronized data gathering from multiple Azure cameras. To start recording, launch
