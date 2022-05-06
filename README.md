@@ -17,9 +17,10 @@ The following source paths and files are created in addition to original Azure c
 ```
 Azure-Kinect-Sensor-SDK/tools:
   mrob_recorder                     # modified k4arecorder as a core executable for recorder.py
+  mrob_images_extractor             # NEW! images extractor + undistorter + depth-to-color projector from MKV files as a backbone for extractor.sh
   mrob_imu_data_extractor           # IMU data extractor from MKV files as a backbone for extractor.sh
   mrob_timestamps_extractor         # timestamps data extractor from MKV files as a backbone for extractor.sh
-  mrob_calibration_params_extractor # New! camera color and depth camera intrinsic and color-to-depth 
+  mrob_calibration_params_extractor # camera color and depth camera intrinsic and color-to-depth 
                                     # camera extrinsic calib params extractor as a backbone for extractor.sh
 recorder.py                         # multi- mrob_recorder launcher for multiple cam recording
 visualizer.py                       # online multi- RGB+D data stream visualizer
@@ -44,9 +45,10 @@ sudo nano /etc/fstab
 ```
 tmpfs       /mnt/mrob_tmpfs tmpfs nodev,nosuid,noexec,nodiratime,size=512M   0 0
 ```
+
 ### Additional packages setup
 #### ffmpef for extractor
-The `ffmpeg` is also required for running extractor:
+The `ffmpeg` is also required for running extractor if `mrob_images_extractor` is not used as a backbone:
 ```shell
 sudo apt-get install ffmpeg
 ```
@@ -56,8 +58,11 @@ For `streamer.py` `numpy`, `python3-tk`, `python3-pil`, `python3-pil.imagetk` pa
 sudo apt-get install python3-tk python3-pil python3-pil.imagetk python3-pip
 pip3 install numpy
 ```
+#### C++ OpenCV is needed
+OpenCV is utilized for `mrob_images_extractor` backbine of `extractor.sh`.
+Testing needed while building on a machine. Update this README too.
 
-### (in case of problems) USB bufer increase
+### (in case of problems) USB buffer increase
 It is also can be needed to increase USB memory buffer. For that, use [this instruction](https://importgeek.wordpress.com/2017/02/26/increase-usbfs-memory-limit-in-ubuntu/).
 
 ### (in case of problems) Depth engine setup
@@ -123,12 +128,14 @@ Extraction is aimed to
 - extract IMU data to a CSV file from IMU data stream,
 - extract timestamps and name extracted images by timestamps,
 - extract camera color and depth camera intrinsic and color-to-depth camera extrinsic calib params
+- __NEW!__ undistort + and project depth to color when using `mrob_images_extractor` backbone in `extractor.sh`
 from every MKV file.
 
 To extract the data, launch the following script with the `<input path>` argument:
 ```
 extractor.sh <input path> # For instance, 'extractor.sh records/2022-02-10-08-36-51'
 ```
+__NEW!__ To use `mrob_images_extractor` backbone, change `use_cpp_extractor=false` to `use_cpp_extractor=true` in `extractor.sh` file.
 
 ### Output data structure
 ```
