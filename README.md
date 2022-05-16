@@ -171,3 +171,26 @@ extracted-data/2022-03-03-17-14-36/
 ...
 ```
 Every image name represents internal camera timestamp in <ins>__microseconds__</ins> from the start of every camera capturing process. Although, the timestamps do not belong to a common clock source, they are synchronized with sub-millisecond precision by Azure hardware by default. More info [here](https://box.zhores.net/index.php/s/93B2QYPxoBMS3aY?path=%2Fazures_timesync_analysis). Leading zeros are used in names for better visibility and sorting.
+
+### REST API
+
+#### Prerequisites:
+```
+pip install fastapi
+pip install "uvicorn[standard]"
+```
+
+#### Run:
+```
+uvicorn recorder_rest:app --reload
+```
+After that API is exposed on 127.0.0.1:8000
+
+#### API:
+* /start?fname=<sequence_name> - start recording
+* /stop - stop recording
+* /remove?fname=<sequence_name> - remove sequence
+* /preview - get recent preview image
+
+#### Client:
+A demo API client is presented in recorder.ipynb
