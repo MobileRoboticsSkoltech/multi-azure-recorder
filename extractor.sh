@@ -2,7 +2,7 @@
 
 #Usage: bash extractor input_directory output_directory
 
-use_cpp_extractor=false
+use_cpp_extractor=true
 
 if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
     echo "Usage: extractor input_directory or extractor input_directory output_directory"
@@ -40,7 +40,7 @@ for mkv_path in $(find $input_path -name '*.mkv' | sed 's,.*/,,' | sed  's,.mkv,
 	cp $input_path/$mkv_path'.csv' $output_path/$mkv_path/global_timestamps.csv
 
 	if [ $use_cpp_extractor = true ]; then
-		$IMAGES_EXTRACTOR_EXE       $input_path/$mkv_path'.mkv' $output_path/$mkv_path
+		$IMAGES_EXTRACTOR_EXE       $input_path/$mkv_path'.mkv' $output_path/$mkv_path 1
 		$TIMESTAMPS_EXTRACTOR_EXE   $input_path/$mkv_path'.mkv' $output_path/$mkv_path
 		$IMU_DATA_EXTRACTOR_EXE     $input_path/$mkv_path'.mkv' $output_path/$mkv_path/imu.csv
 		$CALIB_PARAMS_EXTRACTOR_EXE $input_path/$mkv_path'.mkv' $output_path/$mkv_path/calib_params.json
