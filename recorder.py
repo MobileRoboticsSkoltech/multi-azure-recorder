@@ -223,7 +223,6 @@ def check_response(x, address):
         print_master_error(f'Response code from {address} is {x}. Exit')
         sys.exit()
 
-
 def main():
     argument_parser = argparse.ArgumentParser("Recorder script")
     argument_parser.add_argument("--stickers", type=str, required=False, nargs="+")
@@ -249,10 +248,11 @@ def main():
     predef_addresses = [cams[cam_sticker]['address'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
     for address in predef_addresses:
         print(address)
-        #ip = '127.0.0.1:8000/'
         response = requests.get(f'http://{address}get_connected_camera_list', stream=True)
+        check_response(response, address)
         connected_camera_list = response.json()
         connected_camera_list = connected_camera_list['connected_camera_list']
+
     print(connected_camera_list)
     return 0
     #connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
@@ -284,14 +284,14 @@ def main():
     #    p = subprocess.Popen(subordinate_cmd_line.split())
     #    subordinate_processes.append(p)
     for subordinate_cmd_line, subordinate_address in zip(subordinate_cmd_lines, subordinate_addresses):
-        x = requests.post(f'http://{subordinate_address}launch_recorder', json={'cmd_line' : subordinate_cmd_line}, timeout=TIMEOUT)
+        response = requests.post(f'http://{subordinate_address}launch_recorder', json={'cmd_line' : subordinate_cmd_line}, timeout=TIMEOUT)
         check_response(x, subordinate_address)
 
     # Wait till Subordinate cameras start before Master camera
     time.sleep(1)
 
     #master_process = subprocess.Popen(master_cmd_line.split())
-    x = requests.post(f'http://{master_address}launch_recorder', json={'cmd_line' : master_cmd_line}, timeout=TIMEOUT)
+    response = requests.post(f'http://{master_address}launch_recorder', json={'cmd_line' : master_cmd_line}, timeout=TIMEOUT)
     check_response(x, master_address)
 
     # Handle keyboard interrupt

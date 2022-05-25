@@ -21,7 +21,21 @@ def get_connected_camera_list():
 
 @app.post("/launch_recorder")
 async def launch_recorder(data: dict):
+
+    # Create path
+    path = os.path.join('records', file_base_name)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path)
+    os.chdir(path)
+
     print(data['cmd_line'].split())
+    p = subprocess.Popen()
+    processes.append(p)
+    return 0
+
+@app.get("/stop_recorder")
+def stop_recorder():
     return 0
 
 
