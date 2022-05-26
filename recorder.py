@@ -19,8 +19,8 @@ TIMEOUT = 2
 # Recording parameters that updated during script
 # gain???
 DEFAULT_PARAMS = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    #'1' : {'ser_num' : '000193114212', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '12124'},
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
+    '1' : {'ser_num' : '000193114212', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
+    #'1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
     #'2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
     #'9' : {'ser_num' : '000489713912', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'}
 }
@@ -234,6 +234,8 @@ def main():
     argument_parser.add_argument("--color_mode", type=str, required=False, nargs="+")
     argument_parser.add_argument("--frame_rate", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--exposure", type=int_or_str_type, required=False, nargs="+")
+    #add addr
+    #add stream
     argument_parser.add_argument("--output_path", type=str, required=False)
     args = argument_parser.parse_args()
 
@@ -244,23 +246,25 @@ def main():
     #connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
     #connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
 
-
+    connected_camera_list = ''
     predef_addresses = [cams[cam_sticker]['address'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
     for address in predef_addresses:
-        print(address)
         response = requests.get(f'http://{address}get_connected_camera_list', stream=True)
         check_response(response, address)
-        connected_camera_list = response.json()
-        connected_camera_list = connected_camera_list['connected_camera_list']
+        text = response.json()
+        text = text['connected_camera_list']
+        if 'No devices connected.' in text:
+            print_master_error(f'No connected cameras in {address}. Exit')
+            sys.exit()
+        if text.count('\n') > 1:
+            print_master_error(f'More than one camera is connected to device with address {address}. Exit')
+            sys.exit()
+        connected_camera_list += text
 
-    print(connected_camera_list)
-    return 0
-    #connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
-    
+    connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
     #connected_camera_list = 'Index:0    Serial:000489713912 Color:1.6.110   Depth:1.6.80\nIndex:1 Serial:000905794612 Color:1.6.110   Depth:1.6.80\nIndex:2 Serial:000583592412 Color:1.6.110   Depth:1.6.80'
     #connected_camera_list = 'Index:0    Serial:000193114212 Color:1.6.110   Depth:1.6.80\n'
     #connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
-
 
     cams = assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes, cams)
     cams, file_base_name = create_names_for_path_and_files(cams, master_cam_sticker, args.output_path)
@@ -284,15 +288,19 @@ def main():
     #    p = subprocess.Popen(subordinate_cmd_line.split())
     #    subordinate_processes.append(p)
     for subordinate_cmd_line, subordinate_address in zip(subordinate_cmd_lines, subordinate_addresses):
-        response = requests.post(f'http://{subordinate_address}launch_recorder', json={'cmd_line' : subordinate_cmd_line}, timeout=TIMEOUT)
-        check_response(x, subordinate_address)
+        #data = {'params' : {'cmd_line' : subordinate_cmd_line, 'file_base_name' : file_base_name}}
+        #data = json.dumps(data)
+        response = requests.post(f'http://{subordinate_address}launch_recorder', json=data, timeout=TIMEOUT)
+        check_response(response, subordinate_address)
+
 
     # Wait till Subordinate cameras start before Master camera
     time.sleep(1)
 
     #master_process = subprocess.Popen(master_cmd_line.split())
-    response = requests.post(f'http://{master_address}launch_recorder', json={'cmd_line' : master_cmd_line}, timeout=TIMEOUT)
-    check_response(x, master_address)
+    data = {'cmd_line' : master_cmd_line, 'file_base_name' : file_base_name}
+    response = requests.post(f'http://{master_address}launch_recorder', json=data, timeout=TIMEOUT)
+    check_response(response, master_address)
 
     # Handle keyboard interrupt
     some = 0
@@ -304,6 +312,7 @@ def main():
     except KeyboardInterrupt:
         for subordinate_address in subordinate_addresses:
             requests.get(f'http://{subordinate_address}stop_recorder', stream=True)
+        requests.get(f'http://{master_address}stop_recorder', stream=True)
         time.sleep(2) # needed to finalize stdouts before entire exit
 
 

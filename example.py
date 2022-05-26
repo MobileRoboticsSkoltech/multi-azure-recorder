@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 
 import subprocess
+import shutil
 import os
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
@@ -22,6 +23,9 @@ def get_connected_camera_list():
 @app.post("/launch_recorder")
 async def launch_recorder(data: dict):
 
+    print (data)
+
+    file_base_name = data['file_base_name']
     # Create path
     path = os.path.join('records', file_base_name)
     if os.path.exists(path):
@@ -29,9 +33,9 @@ async def launch_recorder(data: dict):
     os.makedirs(path)
     os.chdir(path)
 
-    print(data['cmd_line'].split())
-    p = subprocess.Popen()
-    processes.append(p)
+    #print(data['cmd_line'].split())
+    #p = subprocess.Popen()
+    #processes.append(p)
     return 0
 
 @app.get("/stop_recorder")
