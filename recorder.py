@@ -58,6 +58,7 @@ def get_predefined_master_cam_sticker(cams):
 def get_distributed_connected_camera_list(cams):
     connected_camera_list = ''
     predef_addresses = [cams[cam_sticker]['address'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
+    predef_addresses = set(predef_addresses)
     for address in predef_addresses:
         response = requests.get(f'http://{address}get_connected_camera_list', stream=True)
         check_response(response, address)
@@ -66,9 +67,9 @@ def get_distributed_connected_camera_list(cams):
         if 'No devices connected.' in text:
             print_master_error(f'No connected cameras in {address}. Exit')
             sys.exit()
-        if text.count('\n') > 1:
-            print_master_error(f'More than one camera is connected to device with address {address}. Exit')
-            sys.exit()
+        #if text.count('\n') > 1:
+        #    print_master_error(f'More than one camera is connected to device with address {address}. Exit')
+        #    sys.exit()
         connected_camera_list += text
     return connected_camera_list
 # Return: connected_camera_list
@@ -167,16 +168,17 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         exposure_setup = f'--exposure-control {exposure}' if exposure is not None else ''
         ts_table_filename = cc['timestamps_table_filename']
         stream_only = cc['stream_only']
-        stream_only_setup = f'--stream-only {stream_only}' if stream_only is not None else ''
+        stream_only_setup = f'--save-all-captures {not stream_only}' if stream_only is not None else ''
         address = cc['address']
 
         if cam_sticker == master_cam_sticker:
-            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
-            master_cmd_line = f'{executable} --device {index} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
+            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
+            #master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
             master_address = address
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
             subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
+            #subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
             subordinate_addresses.append(address)
@@ -238,12 +240,13 @@ def check_response(x, address):
 def check_distributed_recording_status(address):
     response = requests.get(f'http://{address}get_recording_status', stream=True)
     check_response(response, address)
-
     data = response.json()
-    if not data['recording_is_running']:
-        print_master_error(f'Recording of camera with address {address} is not running. Exit')
-        sys.exit()
-    print(data, end=' ')
+    for filename in data.keys():
+        if not data[filename]['recording_is_running']:
+            filename_ = filename.split('.')[0]
+            print_master_error(f'Recording of camera {filename_} on address {address} is not running. Exit')
+            sys.exit()
+    #print(data, end=' ')
 
 
 def main():
@@ -269,22 +272,19 @@ def main():
     master_cam_sticker = get_predefined_master_cam_sticker(cams)
     predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
 
-    distributed = True
+    distributed = args.distributed
     if not distributed:
         connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
     else:
         connected_camera_list = get_distributed_connected_camera_list(cams)
     connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
-    #connected_camera_list = 'Index:0    Serial:000489713912 Color:1.6.110   Depth:1.6.80\nIndex:1 Serial:000905794612 Color:1.6.110   Depth:1.6.80\nIndex:2 Serial:000583592412 Color:1.6.110   Depth:1.6.80'
-    #connected_camera_list = 'Index:0    Serial:000193114212 Color:1.6.110   Depth:1.6.80\n'
-    #connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
 
     cams = assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes, cams)
     cams, file_base_name = create_names_for_path_and_files(cams, master_cam_sticker, args.output_path)
     master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses = prepare_recording_command_lines(cams, master_cam_sticker)
 
     # Create path
-    path = os.path.join('records', file_base_name + f'_client' if distributed else '')
+    path = os.path.join('records', file_base_name)# + f'_client' if distributed else file_base_name)
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path)
@@ -294,28 +294,29 @@ def main():
     with open('recording_params.json', 'w') as fp:
         json.dump(cams, fp)
 
+    def launch_remote_recorder(address, cmd_line, file_base_name):
+        data = {'cmd_line' : cmd_line, 'file_base_name' : file_base_name}
+        response = requests.post(f'http://{address}launch_recorder', json=data, timeout=TIMEOUT)
+        check_response(response, address)
+
     # Launch recording from Subordinate cameras
-    if not distributed: #!args.distributed:
+    if not distributed: 
         subordinate_processes = []
         for subordinate_cmd_line in subordinate_cmd_lines:
             p = subprocess.Popen(subordinate_cmd_line.split())
             subordinate_processes.append(p)
     else:
-        for subordinate_cmd_line, subordinate_address in zip(subordinate_cmd_lines, subordinate_addresses):
-            #data = {'params' : {'cmd_line' : subordinate_cmd_line, 'file_base_name' : file_base_name}}
-            #data = json.dumps(data)
-            response = requests.post(f'http://{subordinate_address}launch_recorder', json=data, timeout=TIMEOUT)
-            check_response(response, subordinate_address)
+        for cmd_line, address in zip(subordinate_cmd_lines, subordinate_addresses):
+            launch_remote_recorder(address, cmd_line, file_base_name)
+            time.sleep(0.1)
 
     # Wait till Subordinate cameras start before Master camera
     time.sleep(1)
 
-    if not distributed: #!args.distributed:
+    if not distributed: 
         master_process = subprocess.Popen(master_cmd_line.split())
     else:
-        data = {'cmd_line' : master_cmd_line, 'file_base_name' : file_base_name}
-        response = requests.post(f'http://{master_address}launch_recorder', json=data, timeout=TIMEOUT)
-        check_response(response, master_address)
+        launch_remote_recorder(master_address, master_cmd_line, file_base_name)
 
     # Handle keyboard interrupt
     count = 0
@@ -323,16 +324,14 @@ def main():
         while True:
             time.sleep(1)
             count+=1
-            print(count, end=' ')
-            # Get info from Subordinate cameras
-            for subordinate_address in subordinate_addresses:
-                check_distributed_recording_status(subordinate_address)
-            # Get info from Master camera
-            check_distributed_recording_status(master_address)
-            print(end='\r')
+            #print(count, end=' ')
+            adresses = set(subordinate_addresses + [master_address])
+            for address in adresses:
+                check_distributed_recording_status(address)
+            #print(end='\r')
 
     except KeyboardInterrupt:
-        if not distributed: #!args.distributed:
+        if not distributed: 
             time.sleep(2) # needed to finalize stdouts before entire exit
         else:
             for subordinate_address in subordinate_addresses:
