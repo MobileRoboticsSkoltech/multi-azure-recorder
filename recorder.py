@@ -10,6 +10,7 @@ import json
 import argparse
 import requests
 
+from utils.utils import bcolors
 
 LITERALS_DEFAULT = "def"
 LITERALS_NONE = "none"
@@ -19,7 +20,7 @@ TIMEOUT = 2
 # Recording parameters that updated during script
 # gain???
 DEFAULT_PARAMS = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000193114212', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
+    '2' : {'ser_num' : '000905794612', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'stream_only' : None, 'address' : '127.0.0.1:8000/'},
     #'1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
     #'2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
     #'9' : {'ser_num' : '000489713912', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'}
@@ -27,17 +28,6 @@ DEFAULT_PARAMS = {#keys '1', '2', etc. correspond to the written numbers sticked
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
 executable = os.path.join(this_file_path, 'Azure-Kinect-Sensor-SDK/build/bin/mrob_recorder')
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 def print_master(string):
     print(bcolors.BOLD + bcolors.OKGREEN + 'MASTER MESSAGE: ' + string + bcolors.ENDC)
@@ -164,14 +154,17 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         output_name = cc['output_name']
         exposure_setup = f'--exposure-control {exposure}' if exposure is not None else ''
         ts_table_filename = cc['timestamps_table_filename']
+        stream_only = cc['stream_only']
+        stream_only_setup = f'--stream-only {stream_only}' if stream_only is not None else ''
         address = cc['address']
-        
+
         if cam_sticker == master_cam_sticker:
-            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
+            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
+            master_cmd_line = f'{executable} --device {index} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
             master_address = address
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
-            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
+            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
             subordinate_addresses.append(address)
@@ -234,9 +227,11 @@ def main():
     argument_parser.add_argument("--color_mode", type=str, required=False, nargs="+")
     argument_parser.add_argument("--frame_rate", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--exposure", type=int_or_str_type, required=False, nargs="+")
-    #add addr
-    #add stream
-    argument_parser.add_argument("--output_path", type=str, required=False)
+    argument_parser.add_argument("--stream_only", type=bool_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--addresses", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--output_path", type=str, required=False, nargs="+")
+    argument_parser.add_argument("--distributed", type=str, required=False)
+
     args = argument_parser.parse_args()
 
     cams = process_arguments(vars(args))
@@ -306,9 +301,16 @@ def main():
     some = 0
     try:
         while True:
-            time.sleep(0.1)
+            time.sleep(1)
             some+=1
             print(some, end='\r')
+            #for subordinate_address in subordinate_addresses:
+            #    response = requests.get(f'http://{subordinate_address}get_info', stream=True)
+            #    print(response.raw)
+            response = requests.get(f'http://{master_address}get_info', stream=True)
+            #print('Some master camera mkv file size:', response.json()['mkv_file_size']/1024//1024)
+            print(response.json())
+
     except KeyboardInterrupt:
         for subordinate_address in subordinate_addresses:
             requests.get(f'http://{subordinate_address}stop_recorder', stream=True)
