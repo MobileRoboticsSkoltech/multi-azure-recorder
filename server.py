@@ -43,7 +43,6 @@ async def launch_recorder(data: dict):
         shutil.rmtree(path)
     os.makedirs(path)
     os.chdir(path)
-    print(path)
 
     p = subprocess.Popen(data['cmd_line'].split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -73,8 +72,11 @@ def last_image():
     creation_times = [os.stat(image).st_ctime_ns for image in images]
     latest_creation_time = max(creation_times)
     latest_image = images[creation_times.index(latest_creation_time)]
+    metainfo = ''
+    for item in latest_image.split('/')[-3:-1]:
+        metainfo += f'{item}_' 
 
-    filename = f'{latest_creation_time}.jpg'
+    filename = f'{metainfo}{latest_creation_time}.jpg'
     return FileResponse(path=latest_image, filename=filename, media_type='image/jpeg')
 
 
