@@ -21,8 +21,13 @@ TIMEOUT = 2
 this_file_path = os.path.dirname(os.path.abspath(__file__))
 executable = os.path.join(this_file_path, 'Azure-Kinect-Sensor-SDK/build/bin/mrob_recorder')
 
-def print_master(string):
-    print(bcolors.BOLD + bcolors.OKGREEN + 'MASTER MESSAGE: ' + string + bcolors.ENDC)
+def print_master(*objects, sep=' ', end='\n', file=sys.stdout, flush=False, print_preword=True):
+    print(bcolors.BOLD + bcolors.OKGREEN + ('MASTER MESSAGE: ' if print_preword else ''), end='', file=file, flush=flush)
+    print(*objects, end='', file=file, flush=flush)
+    print(bcolors.ENDC, sep=sep, end=end, file=file, flush=flush)
+
+#def print_master(string):
+#    print(bcolors.BOLD + bcolors.OKGREEN + 'MASTER MESSAGE: ' + string + bcolors.ENDC)
 
 def print_master_error(string):
     print(bcolors.BOLD + bcolors.FAIL + 'MASTER ERROR: ' + string + bcolors.ENDC)
@@ -246,7 +251,7 @@ def check_distributed_recording_status(address):
             filename_ = filename.split('.')[0]
             print_master_error(f'Recording of camera {filename_} on address {address} is not running. Exit')
             sys.exit()
-    #print(data, end=' ')
+        print_master(f'{filename}:', data[filename]['mkv_file_size'], end=' ', print_preword=False)
 
 
 def main():
@@ -284,7 +289,7 @@ def main():
     master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses = prepare_recording_command_lines(cams, master_cam_sticker)
 
     # Create path
-    path = os.path.join('records', file_base_name)# + f'_client' if distributed else file_base_name)
+    path = os.path.join('records', file_base_name)
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path)
@@ -318,25 +323,29 @@ def main():
     else:
         launch_remote_recorder(master_address, master_cmd_line, file_base_name)
 
+    addresses = set(subordinate_addresses + [master_address])
+
     # Handle keyboard interrupt
+    print()
     count = 0
     try:
         while True:
             time.sleep(1)
             count+=1
-            #print(count, end=' ')
-            adresses = set(subordinate_addresses + [master_address])
-            for address in adresses:
-                check_distributed_recording_status(address)
-            #print(end='\r')
+            if distributed: 
+                #print_master(count, end=' ')
+                for address in addresses:
+                    check_distributed_recording_status(address)
+                print(end='\r')
 
     except KeyboardInterrupt:
-        if not distributed: 
-            time.sleep(2) # needed to finalize stdouts before entire exit
+        if distributed:
+            for address in addresses:
+                requests.get(f'http://{address}stop_recorder', stream=True, timeout=TIMEOUT)
+            time.sleep(2)
         else:
-            for subordinate_address in subordinate_addresses:
-                requests.get(f'http://{subordinate_address}stop_recorder', stream=True, timeout=TIMEOUT)
-            requests.get(f'http://{master_address}stop_recorder', stream=True, timeout=TIMEOUT)
+            time.sleep(2) # needed to finalize stdouts before entire exit
+        print()
 
 if __name__ == '__main__':
     main()

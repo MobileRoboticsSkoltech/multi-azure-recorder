@@ -8,6 +8,7 @@ import shutil
 import os
 import glob
 import time
+import signal
 from utils.utils import *
 
 WATCHDOG_TIMEOUT = 3 # 3 seconds
@@ -48,8 +49,8 @@ async def launch_recorder(data: dict):
 
     arg_list = data['cmd_line'].split()
 
-
     p = subprocess.Popen(arg_list)#, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
     processes[arg_list[-2]] = p
 
 @app.get("/get_recording_status")
@@ -67,7 +68,9 @@ def stop_recorder():
     for filename in processes.keys():
         p = processes[filename]
         if p is not None:
-            p.terminate()
+            p.send_signal(signal.SIGINT)
+
+
 
 @app.get("/get_last_image")
 def last_image():
