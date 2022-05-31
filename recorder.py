@@ -11,20 +11,12 @@ import argparse
 import requests
 
 from utils.utils import bcolors
+from params import *
 
 LITERALS_DEFAULT = "def"
 LITERALS_NONE = "none"
 
 TIMEOUT = 2
-
-# Recording parameters that updated during script
-# gain???
-DEFAULT_PARAMS = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '2' : {'ser_num' : '000905794612', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'stream_only' : None, 'address' : '127.0.0.1:8000/'},
-    #'1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
-    #'2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'},
-    #'9' : {'ser_num' : '000489713912', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None, 'address' : '127.0.0.1:8000/'}
-}
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
 executable = os.path.join(this_file_path, 'Azure-Kinect-Sensor-SDK/build/bin/mrob_recorder')
@@ -60,6 +52,26 @@ def get_predefined_master_cam_sticker(cams):
         sys.exit()
     return master_cam_sticker
 # Return: master_cam_sticker
+
+# Pull distributed connected camera list
+# Params: cams
+def get_distributed_connected_camera_list(cams):
+    connected_camera_list = ''
+    predef_addresses = [cams[cam_sticker]['address'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
+    for address in predef_addresses:
+        response = requests.get(f'http://{address}get_connected_camera_list', stream=True)
+        check_response(response, address)
+        text = response.json()
+        text = text['connected_camera_list']
+        if 'No devices connected.' in text:
+            print_master_error(f'No connected cameras in {address}. Exit')
+            sys.exit()
+        if text.count('\n') > 1:
+            print_master_error(f'More than one camera is connected to device with address {address}. Exit')
+            sys.exit()
+        connected_camera_list += text
+    return connected_camera_list
+# Return: connected_camera_list
 
 # Get connected camera serial numbers and indexes
 # Params: connected_camera_list, predef_ser_nums
@@ -173,6 +185,7 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
 # Return: master_cmd_line, subordinate_cmd_lines
 
 
+
 def int_or_str_type(value):
     value = value.lower()
     if value != LITERALS_DEFAULT and value != LITERALS_NONE:
@@ -183,7 +196,13 @@ def int_or_str_type(value):
 def bool_or_str_type(value):
     value = value.lower()
     if value != LITERALS_DEFAULT and value != LITERALS_NONE:
-        return True if value == "true" else False
+        if value == "true":            
+            return True 
+        elif value == "false":
+            return False
+        else:
+            print_master_error(f'CLI argument {value} is not recognized. Exit')
+            sys.exit()
     return value
 
 
@@ -216,6 +235,17 @@ def check_response(x, address):
         print_master_error(f'Response code from {address} is {x}. Exit')
         sys.exit()
 
+def check_distributed_recording_status(address):
+    response = requests.get(f'http://{address}get_recording_status', stream=True)
+    check_response(response, address)
+
+    data = response.json()
+    if not data['recording_is_running']:
+        print_master_error(f'Recording of camera with address {address} is not running. Exit')
+        sys.exit()
+    print(data, end=' ')
+
+
 def main():
     argument_parser = argparse.ArgumentParser("Recorder script")
     argument_parser.add_argument("--stickers", type=str, required=False, nargs="+")
@@ -228,9 +258,9 @@ def main():
     argument_parser.add_argument("--frame_rate", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--exposure", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--stream_only", type=bool_or_str_type, required=False, nargs="+")
-    argument_parser.add_argument("--addresses", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--address", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--output_path", type=str, required=False, nargs="+")
-    argument_parser.add_argument("--distributed", type=str, required=False)
+    argument_parser.add_argument("--distributed", type=bool_or_str_type, required=False)
 
     args = argument_parser.parse_args()
 
@@ -238,24 +268,12 @@ def main():
 
     master_cam_sticker = get_predefined_master_cam_sticker(cams)
     predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
-    #connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
-    #connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
 
-    connected_camera_list = ''
-    predef_addresses = [cams[cam_sticker]['address'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
-    for address in predef_addresses:
-        response = requests.get(f'http://{address}get_connected_camera_list', stream=True)
-        check_response(response, address)
-        text = response.json()
-        text = text['connected_camera_list']
-        if 'No devices connected.' in text:
-            print_master_error(f'No connected cameras in {address}. Exit')
-            sys.exit()
-        if text.count('\n') > 1:
-            print_master_error(f'More than one camera is connected to device with address {address}. Exit')
-            sys.exit()
-        connected_camera_list += text
-
+    distributed = True
+    if not distributed:
+        connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
+    else:
+        connected_camera_list = get_distributed_connected_camera_list(cams)
     connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
     #connected_camera_list = 'Index:0    Serial:000489713912 Color:1.6.110   Depth:1.6.80\nIndex:1 Serial:000905794612 Color:1.6.110   Depth:1.6.80\nIndex:2 Serial:000583592412 Color:1.6.110   Depth:1.6.80'
     #connected_camera_list = 'Index:0    Serial:000193114212 Color:1.6.110   Depth:1.6.80\n'
@@ -266,7 +284,7 @@ def main():
     master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses = prepare_recording_command_lines(cams, master_cam_sticker)
 
     # Create path
-    path = os.path.join('records', file_base_name)
+    path = os.path.join('records', file_base_name + f'_client' if distributed else '')
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path)
@@ -276,47 +294,50 @@ def main():
     with open('recording_params.json', 'w') as fp:
         json.dump(cams, fp)
 
-
-    # Launch recording
-    #subordinate_processes = []
-    #for subordinate_cmd_line in subordinate_cmd_lines:
-    #    p = subprocess.Popen(subordinate_cmd_line.split())
-    #    subordinate_processes.append(p)
-    for subordinate_cmd_line, subordinate_address in zip(subordinate_cmd_lines, subordinate_addresses):
-        #data = {'params' : {'cmd_line' : subordinate_cmd_line, 'file_base_name' : file_base_name}}
-        #data = json.dumps(data)
-        response = requests.post(f'http://{subordinate_address}launch_recorder', json=data, timeout=TIMEOUT)
-        check_response(response, subordinate_address)
-
+    # Launch recording from Subordinate cameras
+    if not distributed: #!args.distributed:
+        subordinate_processes = []
+        for subordinate_cmd_line in subordinate_cmd_lines:
+            p = subprocess.Popen(subordinate_cmd_line.split())
+            subordinate_processes.append(p)
+    else:
+        for subordinate_cmd_line, subordinate_address in zip(subordinate_cmd_lines, subordinate_addresses):
+            #data = {'params' : {'cmd_line' : subordinate_cmd_line, 'file_base_name' : file_base_name}}
+            #data = json.dumps(data)
+            response = requests.post(f'http://{subordinate_address}launch_recorder', json=data, timeout=TIMEOUT)
+            check_response(response, subordinate_address)
 
     # Wait till Subordinate cameras start before Master camera
     time.sleep(1)
 
-    #master_process = subprocess.Popen(master_cmd_line.split())
-    data = {'cmd_line' : master_cmd_line, 'file_base_name' : file_base_name}
-    response = requests.post(f'http://{master_address}launch_recorder', json=data, timeout=TIMEOUT)
-    check_response(response, master_address)
+    if not distributed: #!args.distributed:
+        master_process = subprocess.Popen(master_cmd_line.split())
+    else:
+        data = {'cmd_line' : master_cmd_line, 'file_base_name' : file_base_name}
+        response = requests.post(f'http://{master_address}launch_recorder', json=data, timeout=TIMEOUT)
+        check_response(response, master_address)
 
     # Handle keyboard interrupt
-    some = 0
+    count = 0
     try:
         while True:
             time.sleep(1)
-            some+=1
-            print(some, end='\r')
-            #for subordinate_address in subordinate_addresses:
-            #    response = requests.get(f'http://{subordinate_address}get_info', stream=True)
-            #    print(response.raw)
-            response = requests.get(f'http://{master_address}get_info', stream=True)
-            #print('Some master camera mkv file size:', response.json()['mkv_file_size']/1024//1024)
-            print(response.json())
+            count+=1
+            print(count, end=' ')
+            # Get info from Subordinate cameras
+            for subordinate_address in subordinate_addresses:
+                check_distributed_recording_status(subordinate_address)
+            # Get info from Master camera
+            check_distributed_recording_status(master_address)
+            print(end='\r')
 
     except KeyboardInterrupt:
-        for subordinate_address in subordinate_addresses:
-            requests.get(f'http://{subordinate_address}stop_recorder', stream=True)
-        requests.get(f'http://{master_address}stop_recorder', stream=True)
-        time.sleep(2) # needed to finalize stdouts before entire exit
-
+        if not distributed: #!args.distributed:
+            time.sleep(2) # needed to finalize stdouts before entire exit
+        else:
+            for subordinate_address in subordinate_addresses:
+                requests.get(f'http://{subordinate_address}stop_recorder', stream=True, timeout=TIMEOUT)
+            requests.get(f'http://{master_address}stop_recorder', stream=True, timeout=TIMEOUT)
 
 if __name__ == '__main__':
-    main()#sys.argv)
+    main()
