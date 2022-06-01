@@ -17,14 +17,15 @@ The following source paths and files are created in addition to original Azure c
 ```
 Azure-Kinect-Sensor-SDK/tools:
   mrob_recorder                     # modified k4arecorder as a core executable for recorder.py
-  mrob_images_extractor             # NEW! images extractor + undistorter + depth-to-color projector from MKV files as a backbone for extractor.sh
+  mrob_images_extractor             # images extractor + undistorter + depth-to-color projector from MKV files as a backbone for extractor.sh
   mrob_imu_data_extractor           # IMU data extractor from MKV files as a backbone for extractor.sh
   mrob_timestamps_extractor         # timestamps data extractor from MKV files as a backbone for extractor.sh
   mrob_calibration_params_extractor # camera color and depth camera intrinsic and color-to-depth 
                                     # camera extrinsic calib params extractor as a backbone for extractor.sh
 recorder.py                         # multi- mrob_recorder launcher for multiple cam recording
-visualizer.py                       # online multi- RGB+D data stream visualizer
+streamer.py                         # online multi- RGB+D data stream visualizer
 extractor.sh                        # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
+server.py                           # 
 ```
 ### RAM utilization
 We use RAM folder for temporary data sharing instead of hard drive frequent read-write stress. For that, three steps must be performed (according to [askubuntu](https://askubuntu.com/questions/597268/virtual-ram-folder-in-ubuntu)).
@@ -69,11 +70,11 @@ It is also can be needed to increase USB memory buffer. For that, use [this inst
 We also found an issue with old OpenGL version when using Azure SDK (to be more precise, this problem comes from depth engine) on Ubuntu 18.04 with Intel integrated graphics. One of the solutions is [installing open source Mesa drivers](https://itsfoss.com/install-mesa-ubuntu/). But still, we are not sure if it is the best solution. With up-to-date Nvidia GPU drivers there should not be problems.
 
 ## Recording
-Recording process include synchronized data gathering from multiple Azure cameras. To start recording, launch
+Recording process include synchronized data gathering from multiple Azure cameras. To start recording from locally attached cameras, launch
 ```
 ./recoder.py
 ```
-with no arguments. For now, Camera parameters are predifined in a python dictionary, we plan to move the parameters to a separate file to avoid modification of the source code by mistake. The command-line arguments may be implemented sometime.
+with no arguments. In this case, camera parameters are predifined by dict in `params.py`.
 
 This is an example of the dict with camera params:
 ```
@@ -82,6 +83,7 @@ cams = {#keys '1', '2', etc. correspond to the written numbers sticked to camera
     '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 360 , 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : '5', 'exposure' : '8000', 'output_name' : None, 'timestamps_table_filename' : None}
 }
 ```
+In case of any specific parameters, `params.py` can be modified or command-line arguments can be put. 
 
 ### Recorded data structure
 Files belonging to a single recording launch are stored in `records/` path. Their names contain date and time of the recrording start:
@@ -128,14 +130,14 @@ Extraction is aimed to
 - extract IMU data to a CSV file from IMU data stream,
 - extract timestamps and name extracted images by timestamps,
 - extract camera color and depth camera intrinsic and color-to-depth camera extrinsic calib params
-- __NEW!__ undistort + and project depth to color when using `mrob_images_extractor` backbone in `extractor.sh`
+- undistort + and project depth to color when using `mrob_images_extractor` backbone in `extractor.sh`
 from every MKV file.
 
 To extract the data, launch the following script with the `<input path>` argument:
 ```
 extractor.sh <input path> # For instance, 'extractor.sh records/2022-02-10-08-36-51'
 ```
-__NEW!__ To use `mrob_images_extractor` backbone, change `use_cpp_extractor=false` to `use_cpp_extractor=true` in `extractor.sh` file.
+To use `mrob_images_extractor` backbone, change `use_cpp_extractor=false` to `use_cpp_extractor=true` in `extractor.sh` file. For choosing extraction+undistortion+matching option, launch `mrob_images_extractor` with no arguments to get info TODO. 
 
 ### Output data structure
 ```
