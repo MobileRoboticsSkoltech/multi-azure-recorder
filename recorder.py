@@ -178,18 +178,16 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
 
         if cam_sticker == master_cam_sticker:
             master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
-            #master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
             master_address = address
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
             subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
-            #subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
             subordinate_addresses.append(address)
 
     return master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses
-# Return: master_cmd_line, subordinate_cmd_lines
+# Return: master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses
 
 
 
@@ -212,7 +210,8 @@ def bool_or_str_type(value):
             sys.exit()
     return value
 
-
+# Process camera parameters only
+# Params: args
 def process_arguments(args):
     # Use all cameras from default config or only specified cameras
     if args["stickers"] is not None:
@@ -236,6 +235,7 @@ def process_arguments(args):
                 cameras_params[camera_sticker][param_name] = args[param_name][camera_sticker_idx]
 
     return cameras_params
+# Return: cameras_params
 
 def check_response(x, address):
     if (x.status_code != 200):
@@ -256,6 +256,7 @@ def check_distributed_recording_status(address):
 
 def main():
     argument_parser = argparse.ArgumentParser("Recorder script")
+    # These arguments below must be set up for every camera separately. For instance, "--stream_only true true false".
     argument_parser.add_argument("--stickers", type=str, required=False, nargs="+")
     argument_parser.add_argument("--ser_num", type=str, required=False, nargs="+")
     argument_parser.add_argument("--master", type=bool_or_str_type, required=False, nargs="+")
@@ -266,7 +267,8 @@ def main():
     argument_parser.add_argument("--frame_rate", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--exposure", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--stream_only", type=bool_or_str_type, required=False, nargs="+")
-    argument_parser.add_argument("--address", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--address", type=str, required=False, nargs="+")
+    # These argumanets are single ones. For instance "--distributed true".
     argument_parser.add_argument("--output_path", type=str, required=False, nargs="+")
     argument_parser.add_argument("--distributed", type=bool_or_str_type, required=False)
 
