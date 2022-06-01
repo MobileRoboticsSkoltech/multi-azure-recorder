@@ -1,6 +1,6 @@
 # multi-azure-recorder
-This repo contains tools for synchronized RGB+D data recording and extraction from multiple Azure Kinect DKs.
-
+This repo contains tools for synchronized RGB+D data __recording, streaming and extraction__ from multiple Azure Kinect DKs.  
+The project supports __distributed setup__: cameras can be connected to separate computers during recording.
 
 ## Building
 ### Azure SDK
@@ -25,7 +25,7 @@ Azure-Kinect-Sensor-SDK/tools:
 recorder.py                         # multi- mrob_recorder launcher for multiple cam recording
 streamer.py                         # online multi- RGB+D data stream visualizer
 extractor.sh                        # MKV data extractor based on ffmpeg, mrob_imu_data_extractor, mrob_timestamps_extractor
-server.py                           # 
+server.py                           # NEW! server for distributed recording from independent computers
 ```
 ### RAM utilization
 We use RAM folder for temporary data sharing instead of hard drive frequent read-write stress. For that, three steps must be performed (according to [askubuntu](https://askubuntu.com/questions/597268/virtual-ram-folder-in-ubuntu)).
@@ -122,7 +122,7 @@ Every recorded MKV file contains (if turned on in params)
 - IMU data stream.
 
 ### Streaming during recording
-`streamer.py` is an additional tool for online image streams visualization. During recording, it can pool temporaly image files (jpg for RGB and binary for D image) created by `mrob_recorder` executable instance. It is not a part of `extractor.py`, but considered to be after solving some issues.
+`streamer.py` is an additional tool for online image streams visualization. During recording, it can pool temporaly image files (jpg for RGB and binary for D image) created by `mrob_recorder` executable instance. For now, doesn't support streaming in distributed setup.
 
 ## Extraction
 Extraction is aimed to
@@ -137,7 +137,9 @@ To extract the data, launch the following script with the `<input path>` argumen
 ```
 extractor.sh <input path> # For instance, 'extractor.sh records/2022-02-10-08-36-51'
 ```
-To use `mrob_images_extractor` backbone, change `use_cpp_extractor=false` to `use_cpp_extractor=true` in `extractor.sh` file. For choosing extraction+undistortion+matching option, launch `mrob_images_extractor` with no arguments to get info TODO. 
+To use `mrob_images_extractor` backbone, change `use_cpp_extractor=false` to `use_cpp_extractor=true` in `extractor.sh` file. For choosing extraction+undistortion+matching option, launch `mrob_images_extractor` with no arguments to get info. 
+
+If recording was performed in distributed setup, all data should be moved to a single path for correct extraction.
 
 ### Output data structure
 ```
@@ -179,3 +181,15 @@ If cameras are connect over distributed independent devices with known IP-addres
 ```
 ./recoder.py --distributed true # IP addresses TODO
 ```
+
+On the server, to which camera is connected, `server.py` must be launched by uvicorn:
+```
+uvicorn server:app
+```
+
+While debugging, uvicorn may be launched with `--reload` option to re-launch server when `server.py` is updated:
+```
+uvicorn server:app --reload
+```
+`--reload` option __shouldn't be set__ in normal working conditions since it consumes CPU power.
+
