@@ -8,36 +8,26 @@ import time
 import shutil
 import json
 import argparse
+import requests
 
+from utils.utils import bcolors
+from params import *
 
 LITERALS_DEFAULT = "def"
 LITERALS_NONE = "none"
 
-
-# Recording parameters that updated during script
-# gain???
-DEFAULT_PARAMS = {#keys '1', '2', etc. correspond to the written numbers sticked to camera bodies
-    '1' : {'ser_num' : '000583592412', 'master' : True , 'index' : None, 'sync_delay' : None, 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None},
-    '2' : {'ser_num' : '000905794612', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None},
-    '9' : {'ser_num' : '000489713912', 'master' : False, 'index' : None, 'sync_delay' : 0   , 'depth_delay' : 0, 'depth_mode' : 'NFOV_UNBINNED', 'color_mode' : '720p', 'frame_rate' : 30, 'exposure' : -7, 'output_name' : None, 'timestamps_table_filename' : None}
-}
+TIMEOUT = 2
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
 executable = os.path.join(this_file_path, 'Azure-Kinect-Sensor-SDK/build/bin/mrob_recorder')
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+def print_master(*objects, sep=' ', end='\n', file=sys.stdout, flush=False, print_preword=True):
+    print(bcolors.BOLD + bcolors.OKGREEN + ('MASTER MESSAGE: ' if print_preword else ''), end='', file=file, flush=flush)
+    print(*objects, end='', file=file, flush=flush)
+    print(bcolors.ENDC, sep=sep, end=end, file=file, flush=flush)
 
-def print_master(string):
-    print(bcolors.BOLD + bcolors.OKGREEN + 'MASTER MESSAGE: ' + string + bcolors.ENDC)
+#def print_master(string):
+#    print(bcolors.BOLD + bcolors.OKGREEN + 'MASTER MESSAGE: ' + string + bcolors.ENDC)
 
 def print_master_error(string):
     print(bcolors.BOLD + bcolors.FAIL + 'MASTER ERROR: ' + string + bcolors.ENDC)
@@ -67,6 +57,27 @@ def get_predefined_master_cam_sticker(cams):
         sys.exit()
     return master_cam_sticker
 # Return: master_cam_sticker
+
+# Pull distributed connected camera list
+# Params: cams
+def get_distributed_connected_camera_list(cams):
+    connected_camera_list = ''
+    predef_addresses = [cams[cam_sticker]['address'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
+    predef_addresses = set(predef_addresses)
+    for address in predef_addresses:
+        response = requests.get(f'http://{address}get_connected_camera_list', stream=True)
+        check_response(response, address)
+        text = response.json()
+        text = text['connected_camera_list']
+        if 'No devices connected.' in text:
+            print_master_error(f'No connected cameras in {address}. Exit')
+            sys.exit()
+        #if text.count('\n') > 1:
+        #    print_master_error(f'More than one camera is connected to device with address {address}. Exit')
+        #    sys.exit()
+        connected_camera_list += text
+    return connected_camera_list
+# Return: connected_camera_list
 
 # Get connected camera serial numbers and indexes
 # Params: connected_camera_list, predef_ser_nums
@@ -147,6 +158,7 @@ def create_names_for_path_and_files(cams, master_cam_sticker, output_path=None):
 # Params: cams, master_cam_sticker
 def prepare_recording_command_lines(cams, master_cam_sticker):
     subordinate_cmd_lines = []
+    subordinate_addresses = []
 
     for cam_sticker in cams.keys():
         cc = cams[cam_sticker]
@@ -160,16 +172,25 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         output_name = cc['output_name']
         exposure_setup = f'--exposure-control {exposure}' if exposure is not None else ''
         ts_table_filename = cc['timestamps_table_filename']
+        stream_only = cc['stream_only']
+        stream_only_setup = f'--save-all-captures {not stream_only}' if stream_only is not None else ''
+        address = cc['address']
 
         if cam_sticker == master_cam_sticker:
-            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
+            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
+            #master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} --save-all-captures FALSE {output_name} {ts_table_filename}'
+            master_address = address
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
-            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {output_name} {ts_table_filename}'
+            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
+            #subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
-    return master_cmd_line, subordinate_cmd_lines
+            subordinate_addresses.append(address)
+
+    return master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses
 # Return: master_cmd_line, subordinate_cmd_lines
+
 
 
 def int_or_str_type(value):
@@ -182,7 +203,13 @@ def int_or_str_type(value):
 def bool_or_str_type(value):
     value = value.lower()
     if value != LITERALS_DEFAULT and value != LITERALS_NONE:
-        return True if value == "true" else False
+        if value == "true":            
+            return True 
+        elif value == "false":
+            return False
+        else:
+            print_master_error(f'CLI argument {value} is not recognized. Exit')
+            sys.exit()
     return value
 
 
@@ -210,6 +237,22 @@ def process_arguments(args):
 
     return cameras_params
 
+def check_response(x, address):
+    if (x.status_code != 200):
+        print_master_error(f'Response code from {address} is {x}. Exit')
+        sys.exit()
+
+def check_distributed_recording_status(address):
+    response = requests.get(f'http://{address}get_recording_status', stream=True)
+    check_response(response, address)
+    data = response.json()
+    for filename in data.keys():
+        if not data[filename]['recording_is_running']:
+            filename_ = filename.split('.')[0]
+            print_master_error(f'Recording of camera {filename_} on address {address} is not running. Exit')
+            sys.exit()
+        print_master(f'{filename}:', data[filename]['mkv_file_size'], end=' ', print_preword=False)
+
 
 def main():
     argument_parser = argparse.ArgumentParser("Recorder script")
@@ -222,18 +265,28 @@ def main():
     argument_parser.add_argument("--color_mode", type=str, required=False, nargs="+")
     argument_parser.add_argument("--frame_rate", type=int_or_str_type, required=False, nargs="+")
     argument_parser.add_argument("--exposure", type=int_or_str_type, required=False, nargs="+")
-    argument_parser.add_argument("--output_path", type=str, required=False)
+    argument_parser.add_argument("--stream_only", type=bool_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--address", type=int_or_str_type, required=False, nargs="+")
+    argument_parser.add_argument("--output_path", type=str, required=False, nargs="+")
+    argument_parser.add_argument("--distributed", type=bool_or_str_type, required=False)
+
     args = argument_parser.parse_args()
 
     cams = process_arguments(vars(args))
 
     master_cam_sticker = get_predefined_master_cam_sticker(cams)
     predef_ser_nums = [cams[cam_sticker]['ser_num'] for cam_sticker in cams.keys()] # Parse predefined serial numbers
-    connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
+
+    distributed = args.distributed
+    if not distributed:
+        connected_camera_list = subprocess.check_output([f'{executable}', '--list']).decode('utf-8') # Get connected camera list
+    else:
+        connected_camera_list = get_distributed_connected_camera_list(cams)
     connected_ser_nums, connected_indexes = get_connected_camera_serial_numbers_and_indexes(connected_camera_list, predef_ser_nums)
+
     cams = assign_indexes_to_predefined_cameras (connected_ser_nums, connected_indexes, cams)
     cams, file_base_name = create_names_for_path_and_files(cams, master_cam_sticker, args.output_path)
-    master_cmd_line, subordinate_cmd_lines = prepare_recording_command_lines(cams, master_cam_sticker)
+    master_cmd_line, subordinate_cmd_lines, master_address, subordinate_addresses = prepare_recording_command_lines(cams, master_cam_sticker)
 
     # Create path
     path = os.path.join('records', file_base_name)
@@ -246,25 +299,53 @@ def main():
     with open('recording_params.json', 'w') as fp:
         json.dump(cams, fp)
 
+    def launch_remote_recorder(address, cmd_line, file_base_name):
+        data = {'cmd_line' : cmd_line, 'file_base_name' : file_base_name}
+        response = requests.post(f'http://{address}launch_recorder', json=data, timeout=TIMEOUT)
+        check_response(response, address)
 
-    # Launch recording
-    subordinate_processes = []
-    for subordinate_cmd_line in subordinate_cmd_lines:
-        p = subprocess.Popen(subordinate_cmd_line.split())
-        subordinate_processes.append(p)
+    # Launch recording from Subordinate cameras
+    if not distributed: 
+        subordinate_processes = []
+        for subordinate_cmd_line in subordinate_cmd_lines:
+            p = subprocess.Popen(subordinate_cmd_line.split())
+            subordinate_processes.append(p)
+    else:
+        for cmd_line, address in zip(subordinate_cmd_lines, subordinate_addresses):
+            launch_remote_recorder(address, cmd_line, file_base_name)
+            time.sleep(0.1)
 
     # Wait till Subordinate cameras start before Master camera
     time.sleep(1)
 
-    master_process = subprocess.Popen(master_cmd_line.split())
+    if not distributed: 
+        master_process = subprocess.Popen(master_cmd_line.split())
+    else:
+        launch_remote_recorder(master_address, master_cmd_line, file_base_name)
+
+    addresses = set(subordinate_addresses + [master_address])
 
     # Handle keyboard interrupt
+    print()
+    count = 0
     try:
         while True:
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        time.sleep(2) # needed to finalize stdouts before entire exit
+            time.sleep(1)
+            count+=1
+            if distributed: 
+                #print_master(count, end=' ')
+                for address in addresses:
+                    check_distributed_recording_status(address)
+                print(end='\r')
 
+    except KeyboardInterrupt:
+        if distributed:
+            for address in addresses:
+                requests.get(f'http://{address}stop_recorder', stream=True, timeout=TIMEOUT)
+            time.sleep(2)
+        else:
+            time.sleep(2) # needed to finalize stdouts before entire exit
+        print()
 
 if __name__ == '__main__':
-    main()#sys.argv)
+    main()

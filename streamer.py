@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import tkinter as tk
-from pathlib import Path
 from PIL import Image, ImageTk
 from itertools import cycle
 import numpy as np
 import sys
 import argparse
 
+image_path = '/mnt/mrob_tmpfs/images'
+ids = ['000583592412', '000905794612', '000489713912']
 
 class Application(tk.Tk):
 
@@ -21,89 +22,47 @@ class Application(tk.Tk):
         #self.label = tk.Label(self)
         #self.label.pack()
 
-        self.label1 = tk.Label(self)
-        self.label1.grid(row=1, column=1)
-        self.label2 = tk.Label(self)
-        self.label2.grid(row=1, column=2)
-        
-        self.label3 = tk.Label(self)
-        self.label3.grid(row=2, column=1)
-        self.label4 = tk.Label(self)
-        self.label4.grid(row=2, column=2)
-
-        self.label5 = tk.Label(self)
-        self.label5.grid(row=3, column=1)
-        self.label6 = tk.Label(self)
-        self.label6.grid(row=3, column=2)
+        self.labels = []
+        self.images = [[None, None], [None, None], [None, None]]
+        for row in range(1,3+1):
+            temp = []
+            for column in range(1,2+1):
+                label = tk.Label(self)
+                label.grid(row=row, column=column)   
+                temp.append(label)
+            self.labels.append(temp)
 
         self.duration_ms = 100
         self.n = 1
 
-    #def set_image_directory(self, path):
-    #    global next_image
-    #    image_paths = Path(path).glob("*color.jpg")
-    #    self.imnames = cycle(map(lambda p: p.name, image_paths))
-    #    self.imbufs = cycle(map(ImageTk.PhotoImage, map(Image.open, image_paths)))
-    #    next_image = next(self.imbufs)
+    def rescale(self, array):
+        out = 255.0 / (array.max() - array.min()) * (array - array.min())
+        return out.astype(np.uint8)
 
+    def config_label(self, image, image_index, row_index):
+        self.images[image_index][row_index] = ImageTk.PhotoImage(image)
+        self.labels[image_index][row_index].config(image=self.images[image_index][row_index])
+        
+    def prepare_color(self, image, image_index):
+        image = Image.open(image)
+        image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
+        if self.flip:
+            image = image.transpose(Image.FLIP_LEFT_RIGHT)
+        self.config_label(image, image_index, 0)
+        
+    def prepare_depth(self, image, image_index):
+        array = np.fromfile(image, dtype=np.uint16)
+        array = self.rescale(array)            
+        image = Image.fromarray(array.reshape(576,640)[::2,::2])
+        if self.flip:
+            image = image.transpose(Image.FLIP_LEFT_RIGHT)
+        self.config_label(image, image_index, 1)
 
     def display_next_slide(self):
-        #image_paths = Path('/tmp').glob("*color.jpg")
-        #self.imnames = cycle(map(lambda p: p.name, image_paths))
-        #self.imbufs = cycle(map(ImageTk.PhotoImage, map(Image.open, image_paths)))
-        #next_image = next(self.imbufs)
-        #name, next_image = next(self.images)
-        #name = next(self.imnames)
-        #next_image = next(self.imbufs)
-        def rescale(array):
-            out = 255.0 / (array.max() - array.min()) * (array - array.min())
-            return out.astype(np.uint8)
-        
         try:
-            image = Image.open('/mnt/mrob_tmpfs/images/000583592412/color/0.jpg')
-            image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
-            if self.flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            self.next_image = ImageTk.PhotoImage(image)
-            self.label1.config(image=self.next_image)
-            
-            array = np.fromfile('/mnt/mrob_tmpfs/images/000583592412/depth/0.bin', dtype=np.uint16)
-            array = rescale(array)            
-            image = Image.fromarray(array.reshape(576,640)[::2,::2])
-            if self.flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            self.next_image2 = ImageTk.PhotoImage(image)
-            self.label2.config(image=self.next_image2)
-
-            image = Image.open('/mnt/mrob_tmpfs/images/000905794612/color/0.jpg')
-            image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
-            if self.flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            self.next_image3 = ImageTk.PhotoImage(image)
-            self.label3.config(image=self.next_image3)
-            
-            array = np.fromfile('/mnt/mrob_tmpfs/images/000905794612/depth/0.bin', dtype=np.uint16)
-            array = rescale(array)
-            image = Image.fromarray(array.reshape(576,640)[::2,::2])
-            if self.flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            self.next_image4 = ImageTk.PhotoImage(image)
-            self.label4.config(image=self.next_image4)
-
-            image = Image.open('/mnt/mrob_tmpfs/images/000489713912/color/0.jpg')
-            image = image.resize((int(image.size[0]/2.5), int(image.size[1]/2.5)))
-            if self.flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            self.next_image5 = ImageTk.PhotoImage(image)
-            self.label5.config(image=self.next_image5)
-            
-            array = np.fromfile('/mnt/mrob_tmpfs/images/000489713912/depth/0.bin', dtype=np.uint16)
-            array = rescale(array)
-            image = Image.fromarray(array.reshape(576,640)[::2,::2])
-            if self.flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
-            self.next_image6 = ImageTk.PhotoImage(image)
-            self.label6.config(image=self.next_image6)
+            for i in range(3):
+                self.prepare_color(f'{image_path}/{ids[i]}/color/0.jpg', i)
+                self.prepare_depth(f'{image_path}/{ids[i]}/depth/0.bin', i)
         except:
             pass
 
