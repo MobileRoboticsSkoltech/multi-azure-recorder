@@ -1,4 +1,3 @@
 extracted-data
 records
-
-.idea/
+__pycache__
