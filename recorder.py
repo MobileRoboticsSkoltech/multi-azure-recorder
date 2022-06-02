@@ -177,11 +177,11 @@ def prepare_recording_command_lines(cams, master_cam_sticker):
         address = cc['address']
 
         if cam_sticker == master_cam_sticker:
-            master_cmd_line = f'{executable} --device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
+            master_cmd_line = f'--device {index} --external-sync Master --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
             master_address = address
             print_master('Master recording command:\n  ' + master_cmd_line)
         else:
-            subordinate_cmd_line = f'{executable} --device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
+            subordinate_cmd_line = f'--device {index} --external-sync Subordinate --sync-delay {sync_delay} --depth-delay {depth_delay} --depth-mode {depth_mode} --color-mode {color_mode} --rate {frame_rate} {exposure_setup} {stream_only_setup} {output_name} {ts_table_filename}'
             print_master('Subordinate recording command:\n  ' + subordinate_cmd_line)
             subordinate_cmd_lines.append(subordinate_cmd_line)
             subordinate_addresses.append(address)
@@ -310,18 +310,18 @@ def main():
     if not distributed: 
         subordinate_processes = []
         for subordinate_cmd_line in subordinate_cmd_lines:
-            p = subprocess.Popen(subordinate_cmd_line.split())
+            p = subprocess.Popen([executable] + subordinate_cmd_line.split())
             subordinate_processes.append(p)
     else:
         for cmd_line, address in zip(subordinate_cmd_lines, subordinate_addresses):
             launch_remote_recorder(address, cmd_line, file_base_name)
-            time.sleep(0.1)
+            #time.sleep(0.1)
 
     # Wait till Subordinate cameras start before Master camera
-    time.sleep(1)
+    time.sleep(2)
 
     if not distributed: 
-        master_process = subprocess.Popen(master_cmd_line.split())
+        master_process = subprocess.Popen([executable] + master_cmd_line.split())
     else:
         launch_remote_recorder(master_address, master_cmd_line, file_base_name)
 
@@ -332,7 +332,7 @@ def main():
     count = 0
     try:
         while True:
-            time.sleep(1)
+            time.sleep(3)
             count+=1
             if distributed: 
                 #print_master(count, end=' ')
@@ -344,7 +344,6 @@ def main():
         if distributed:
             for address in addresses:
                 requests.get(f'http://{address}stop_recorder', stream=True, timeout=TIMEOUT)
-            time.sleep(2)
         else:
             time.sleep(2) # needed to finalize stdouts before entire exit
         print()
