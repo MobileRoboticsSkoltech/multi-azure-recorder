@@ -11,7 +11,7 @@ import time
 import signal
 from utils.utils import *
 
-WATCHDOG_TIMEOUT = 3 # 3 seconds
+WATCHDOG_TIMEOUT = 10 # seconds
 TEMP_IMAGES_PATH = '/mnt/mrob_tmpfs/images/'
 
 this_file_path = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +48,7 @@ async def launch_recorder(data: dict):
     os.chdir(path)
 
     arg_list = data['cmd_line'].split()
+    arg_list.insert(0, executable)
 
     p = subprocess.Popen(arg_list)#, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
