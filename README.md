@@ -2,6 +2,8 @@
 This repo contains tools for synchronized RGB+D data __recording, streaming and extraction__ from multiple Azure Kinect DKs.  
 The project supports __distributed setup__: cameras can be connected to separate computers during recording.
 
+![blob/master/data/local.png](data/local.png)
+
 ## Building
 ### Azure SDK
 To start usage of the code, clone the repo with already modified Azure SDK:
@@ -177,6 +179,8 @@ extracted-data/2022-03-03-17-14-36/
 Every image name represents internal camera timestamp in <ins>__microseconds__</ins> from the start of every camera capturing process. Although, the timestamps do not belong to a common clock source, they are synchronized with sub-millisecond precision by Azure hardware by default. More info [here](https://box.zhores.net/index.php/s/93B2QYPxoBMS3aY?path=%2Fazures_timesync_analysis). Leading zeros are used in names for better visibility and sorting.
 
 ### NEW! Distributed camera recording option
+![blob/master/data/distributed.png](data/distributed.png)
+
 If cameras are connect over distributed independent devices with known IP-addresses, the recording can be launched on a client PC and command-line may look like
 ```
 ./recoder.py --distributed true # IP addresses TODO
