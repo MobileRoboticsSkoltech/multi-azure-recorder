@@ -4,7 +4,13 @@ The project supports __distributed setup__: cameras can be connected to separate
 
 ![blob/master/data/local.png](data/local.png)
 
+## Jetson Nano Install and Usage
+Complete example of installation and recording is prepared for Jetson Nano platform that is listed in [docs readme](docs).
+
+
+
 ## Building
+
 ### Azure SDK
 To start usage of the code, clone the repo with already modified Azure SDK:
 ```
@@ -176,24 +182,24 @@ extracted-data/2022-03-03-17-14-36/
 │   └── imu.csv
 ...
 ```
-Every image name represents internal camera timestamp in <ins>__microseconds__</ins> from the start of every camera capturing process. Although, the timestamps do not belong to a common clock source, they are synchronized with sub-millisecond precision by Azure hardware by default. More info [here](https://box.zhores.net/index.php/s/93B2QYPxoBMS3aY?path=%2Fazures_timesync_analysis). Leading zeros are used in names for better visibility and sorting.
+Every image name represents internal camera timestamp in <ins>__microseconds__</ins> from the start of every camera capturing process. Although, the timestamps do not belong to a common clock source, they are synchronized with sub-millisecond precision by Azure hardware by default. Leading zeros are used in names for better visibility and sorting.
 
-### NEW! Distributed camera recording option
+## NEW! Distributed camera recording option
 ![blob/master/data/distributed.png](data/distributed.png)
 
 If cameras are connect over distributed independent devices with known IP-addresses, the recording can be launched on a client PC and command-line may look like
 ```
-./recoder.py --distributed true # IP addresses TODO
+./recoder.py --distributed true
 ```
 
 On the server, to which camera is connected, `server.py` must be launched by uvicorn:
 ```
-uvicorn server:app
+uvicorn server:app --host 0.0.0.0
 ```
 
 While debugging, uvicorn may be launched with `--reload` option to re-launch server when `server.py` is updated:
 ```
-uvicorn server:app --reload
+uvicorn server:app --reload --host 0.0.0.0
 ```
 `--reload` option __shouldn't be set__ in normal working conditions since it consumes CPU power.
 
