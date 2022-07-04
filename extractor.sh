@@ -37,10 +37,11 @@ for mkv_path in $(find $input_path -name '*.mkv' | sed 's,.*/,,' | sed  's,.mkv,
 	do
 
 	mkdir -p $output_path/$mkv_path/{color,depth}
+	#,point_cloud}
 	cp $input_path/$mkv_path'.csv' $output_path/$mkv_path/global_timestamps.csv
 
 	if [ $use_cpp_extractor = true ]; then
-		$IMAGES_EXTRACTOR_EXE       $input_path/$mkv_path'.mkv' $output_path/$mkv_path 1
+		$IMAGES_EXTRACTOR_EXE       --mode 1 $input_path/$mkv_path'.mkv' $output_path/$mkv_path
 		$TIMESTAMPS_EXTRACTOR_EXE   $input_path/$mkv_path'.mkv' $output_path/$mkv_path
 		$IMU_DATA_EXTRACTOR_EXE     $input_path/$mkv_path'.mkv' $output_path/$mkv_path/imu.csv
 		$CALIB_PARAMS_EXTRACTOR_EXE $input_path/$mkv_path'.mkv' $output_path/$mkv_path/calib_params.json
