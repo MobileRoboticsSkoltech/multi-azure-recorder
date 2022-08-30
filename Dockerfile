@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     curl \
     gpg-agent \
+    libboost-all-dev \
     libgl1-mesa-dev:$ARCH \
     libsoundio-dev:$ARCH \
     libjpeg-dev:$ARCH \
