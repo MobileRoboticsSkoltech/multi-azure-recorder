@@ -4,7 +4,7 @@ ARG ARCH=amd64
 
 ############ Part 2: SDK and multirecorder setup #############
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update --allow-unauthenticated && apt-get install -y --allow-unauthenticated \
     file \
     dpkg-dev \
     qemu \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     curl \
     gpg-agent \
+    libboost-all-dev \
     libgl1-mesa-dev:$ARCH \
     libsoundio-dev:$ARCH \
     libjpeg-dev:$ARCH \
